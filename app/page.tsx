@@ -1,7 +1,14 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
+
+// ============================================================================
+// KONFIGURASI IKLAN ADSTERRA (Ganti nilai variabel di bawah dengan milikmu)
+// ============================================================================
+const ADSTERRA_BANNER_KEY = 'a1b2c3d4e5f67890a1b2c3d4e5f67890'; // Key 32 Karakter Adsterra Banner (728x90)
+const ADSTERRA_SOCIAL_BAR_URL = '//pl12345678.highcpmgate.com/xx/xx/xx/xxxxxxxx.js'; // URL Script Social Bar / Pop-under
+// ============================================================================
 
 interface Game {
   id: string;
@@ -20,7 +27,7 @@ interface Game {
   isBigHero?: boolean;
 }
 
-// Helper untuk memformat URL embed GameDistribution agar tidak terblokir
+// Helper memformat URL embed GameDistribution agar valid di HP & PC
 function getEmbedUrl(url: string): string {
   const baseUrl = url.split('?')[0];
   return `${baseUrl}?gd_sdk_referrer_url=https://gamedistribution.com/`;
@@ -54,6 +61,42 @@ function GameImage({ src, alt, className, fallbackIcon }: { src: string; alt: st
       {hasError && (
         <span className="absolute top-2 left-2 text-2xl drop-shadow">{fallbackIcon}</span>
       )}
+    </div>
+  );
+}
+
+// KOMPONEN IKLAN ADSTERRA BANNER
+function AdsterraBanner() {
+  const adRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!adRef.current || adRef.current.hasChildNodes()) return;
+
+    // 1. Script Konfigurasi atOptions
+    const confScript = document.createElement('script');
+    confScript.type = 'text/javascript';
+    confScript.text = `
+      atOptions = {
+        'key' : '${ADSTERRA_BANNER_KEY}',
+        'format' : 'iframe',
+        'height' : 90,
+        'width' : 728,
+        'params' : {}
+      };
+    `;
+
+    // 2. Script Invoke Adsterra
+    const invokeScript = document.createElement('script');
+    invokeScript.type = 'text/javascript';
+    invokeScript.src = `//www.highperformanceformat.com/${ADSTERRA_BANNER_KEY}/invoke.js`;
+
+    adRef.current.appendChild(confScript);
+    adRef.current.appendChild(invokeScript);
+  }, []);
+
+  return (
+    <div className="w-full flex justify-center items-center my-4 min-h-[90px] overflow-hidden">
+      <div ref={adRef} />
     </div>
   );
 }
@@ -846,6 +889,21 @@ export default function Home() {
 
   const gameContainerRef = useRef<HTMLDivElement>(null);
 
+  // SCRIPT INJEKSI ADSTERRA SOCIAL BAR / POP-UNDER
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = ADSTERRA_SOCIAL_BAR_URL;
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+
   const filteredGames = useMemo(() => {
     return GAMES.filter((g) => {
       const query = searchQuery.toLowerCase();
@@ -882,14 +940,14 @@ export default function Home() {
     <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
       
       {/* NAVBAR ATAS */}
-      <header className="h-16 bg-[#0f1523]/90 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-50 flex items-center px-4 md:px-6 justify-between gap-4">
+      <header className="h-16 bg-[#0f1523]/90 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-50 flex items-center px-4 md:px-6 justify-between gap-3">
         
         {/* LOGO RIXXGAMES */}
-        <Link href="/" className="flex items-center gap-3 group shrink-0">
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-purple-600 p-0.5 shadow-lg shadow-cyan-500/20 group-hover:scale-105 group-hover:shadow-cyan-500/40 transition duration-300">
+        <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
+          <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-purple-600 p-0.5 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition duration-300">
             <div className="w-full h-full bg-[#0c0f18] rounded-[14px] flex items-center justify-center relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-purple-600/20 opacity-60"></div>
-              <svg className="w-6 h-6 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="12 2 2 7 12 12 22 7 12 2" />
                 <polyline points="2 17 12 22 22 17" />
                 <polyline points="2 12 12 17 22 12" />
@@ -898,14 +956,14 @@ export default function Home() {
           </div>
           
           <div className="flex flex-col">
-            <span className="font-black text-xl tracking-wider text-white uppercase leading-none">
+            <span className="font-black text-lg sm:text-xl tracking-wider text-white uppercase leading-none">
               Rixx<span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">Games</span>
             </span>
-            <span className="text-[9px] font-bold text-cyan-400/80 tracking-widest uppercase mt-0.5">Online Arcade Portal</span>
+            <span className="text-[8px] sm:text-[9px] font-bold text-cyan-400/80 tracking-widest uppercase mt-0.5">Online Arcade Portal</span>
           </div>
         </Link>
 
-        {/* SEARCH BAR CENTRAL */}
+        {/* SEARCH BAR CENTRAL (DESKTOP) */}
         <div className="flex-1 max-w-xl relative hidden sm:block">
           <input
             type="text"
@@ -918,19 +976,33 @@ export default function Home() {
         </div>
 
         {/* ACTION BUTTON */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button 
             onClick={() => setShowCommunity(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#182132] hover:bg-slate-800 text-xs font-semibold text-slate-200 transition border border-slate-700/50 active:scale-95 cursor-pointer shadow-sm"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full bg-[#182132] hover:bg-slate-800 text-xs font-semibold text-slate-200 transition border border-slate-700/50 active:scale-95 cursor-pointer shadow-sm"
           >
-            <span>👥</span> Komunitas
+            <span>👥</span> <span className="hidden sm:inline">Komunitas</span>
           </button>
         </div>
       </header>
 
+      {/* SEARCH BAR MOBILE */}
+      <div className="p-3 sm:hidden border-b border-slate-800/60 bg-[#0c111d]">
+        <div className="relative w-full">
+          <input
+            type="text"
+            placeholder="Cari game seru..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-[#080c14] border border-slate-800 rounded-full py-2 pl-9 pr-4 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+          />
+          <span className="absolute left-3 top-2.5 text-slate-500 text-xs">🔍</span>
+        </div>
+      </div>
+
       <div className="flex flex-1">
         
-        {/* SIDEBAR KIRI */}
+        {/* SIDEBAR KIRI (DESKTOP) */}
         <aside className="w-52 bg-[#0f1523]/80 border-r border-slate-800/80 hidden md:flex flex-col p-3 space-y-1 shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-none">
           {SIDEBAR_MENU.map((menu) => (
             <button
@@ -949,42 +1021,40 @@ export default function Home() {
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto space-y-6 overflow-hidden">
+        <main className="flex-1 p-3 sm:p-6 max-w-7xl mx-auto space-y-5 overflow-hidden">
           
-          {/* KATEGORI ATAS */}
-          <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none">
+          {/* KATEGORI ATAS (SCROLL HORIZONTAL TOUCH-FRIENDLY) */}
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none touch-pan-x">
             {CATEGORIES.map((cat) => (
               <div
                 key={cat.name}
                 onClick={() => setSelectedCat(cat.name)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-gradient-to-r ${cat.color} shrink-0 cursor-pointer hover:scale-105 transition shadow-lg border border-white/10 ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-r ${cat.color} shrink-0 cursor-pointer active:scale-95 sm:hover:scale-105 transition shadow-md border border-white/10 ${
                   selectedCat === cat.name ? 'ring-2 ring-cyan-400 scale-105' : ''
                 }`}
               >
-                <span className="text-base">{cat.icon}</span>
-                <span className="text-xs font-black text-white whitespace-nowrap">{cat.name}</span>
+                <span className="text-sm sm:text-base">{cat.icon}</span>
+                <span className="text-[11px] sm:text-xs font-black text-white whitespace-nowrap">{cat.name}</span>
               </div>
             ))}
           </div>
 
-          {/* CONTAINER IKLAN LATAR BELAKANG */}
-          <div id="ad-banner-slot" className="w-full flex justify-center items-center my-0 min-h-[0px] overflow-hidden">
-            {/* Slot otomatis untuk Monetag / AdSense / Adsterra */}
-          </div>
+          {/* CONTAINER IKLAN ADSTERRA BANNER */}
+          <AdsterraBanner />
 
           {/* HERO FEATURED GRID */}
           {bigHeroGame ? (
             <section className="space-y-3">
-              <h2 className="text-base font-black text-white flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
                 <span>🔥</span> Game {selectedCat === 'Beranda' ? 'terpopuler hari ini' : selectedCat} di RixxGames
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                 
                 {/* KARTU BESAR UTAMA */}
                 <div
                   onClick={() => setActiveGame(bigHeroGame)}
-                  className="md:col-span-2 h-80 rounded-3xl border border-cyan-500/30 hover:border-cyan-400 cursor-pointer transition-all hover:scale-[1.01] shadow-2xl flex flex-col justify-end p-6 relative overflow-hidden group"
+                  className="md:col-span-2 h-64 sm:h-80 rounded-2xl sm:rounded-3xl border border-cyan-500/30 sm:hover:border-cyan-400 cursor-pointer transition-all active:scale-[0.99] sm:hover:scale-[1.01] shadow-2xl flex flex-col justify-end p-4 sm:p-6 relative overflow-hidden group"
                 >
                   <GameImage
                     src={bigHeroGame.image}
@@ -992,46 +1062,46 @@ export default function Home() {
                     fallbackIcon={bigHeroGame.fallbackIcon}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent"></div>
 
-                  <div className="absolute top-4 right-4 z-10 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black text-amber-300 border border-white/10">
+                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-black text-amber-300 border border-white/10">
                     {bigHeroGame.badge}
                   </div>
 
-                  <div className="relative z-10 space-y-2">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-cyan-400 bg-cyan-950/80 px-2.5 py-0.5 rounded-md border border-cyan-500/30">
+                  <div className="relative z-10 space-y-1.5 sm:space-y-2">
+                    <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-cyan-400 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/30">
                       {bigHeroGame.category}
                     </span>
-                    <h3 className="text-2xl sm:text-3xl font-black text-white group-hover:text-cyan-300 transition">{bigHeroGame.title}</h3>
-                    <p className="text-xs text-slate-300 max-w-lg line-clamp-2">{bigHeroGame.description}</p>
-                    <button className="mt-2 px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold rounded-xl text-xs transition shadow-lg shadow-cyan-500/30 cursor-pointer inline-flex items-center gap-2">
+                    <h3 className="text-xl sm:text-3xl font-black text-white group-hover:text-cyan-300 transition">{bigHeroGame.title}</h3>
+                    <p className="text-[11px] sm:text-xs text-slate-300 max-w-lg line-clamp-2">{bigHeroGame.description}</p>
+                    <button className="mt-1 px-5 py-2 sm:px-6 sm:py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold rounded-xl text-xs transition shadow-lg shadow-cyan-500/30 cursor-pointer inline-flex items-center gap-2">
                       <span>Mainkan Sekarang</span> 🎮
                     </button>
                   </div>
                 </div>
 
                 {/* KARTU KECIL SAMPING */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                   {gridGames.slice(0, 4).map((game) => (
                     <div
                       key={game.id}
                       onClick={() => setActiveGame(game)}
-                      className="bg-[#0f1523] border border-slate-800 hover:border-cyan-500/80 rounded-2xl p-2.5 cursor-pointer transition hover:-translate-y-1 flex flex-col justify-between group overflow-hidden"
+                      className="bg-[#0f1523] border border-slate-800 hover:border-cyan-500/80 rounded-2xl p-2 sm:p-2.5 cursor-pointer transition active:scale-95 sm:hover:-translate-y-1 flex flex-col justify-between group overflow-hidden"
                     >
-                      <div className="h-24 w-full rounded-xl overflow-hidden relative">
+                      <div className="h-20 sm:h-24 w-full rounded-xl overflow-hidden relative">
                         <GameImage
                           src={game.image}
                           alt={game.title}
                           fallbackIcon={game.fallbackIcon}
                           className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                         />
-                        <span className="absolute top-1.5 right-1.5 text-[9px] font-black px-1.5 py-0.5 bg-black/70 text-amber-300 rounded backdrop-blur-sm z-10">
+                        <span className="absolute top-1 right-1 text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 bg-black/80 text-amber-300 rounded backdrop-blur-sm z-10">
                           {game.rating}
                         </span>
                       </div>
-                      <div className="mt-2">
-                        <h4 className="font-extrabold text-xs text-white truncate group-hover:text-cyan-300 transition">{game.title}</h4>
-                        <span className="text-[10px] text-slate-400 font-medium">{game.category}</span>
+                      <div className="mt-1.5">
+                        <h4 className="font-extrabold text-[11px] sm:text-xs text-white truncate group-hover:text-cyan-300 transition">{game.title}</h4>
+                        <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium">{game.category}</span>
                       </div>
                     </div>
                   ))}
@@ -1041,7 +1111,7 @@ export default function Home() {
             </section>
           ) : (
             <div className="text-center py-12 text-slate-400 bg-[#0f1523] rounded-3xl border border-slate-800">
-              <p className="text-sm">Tidak ada game yang ditemukan untuk kategori <strong>{selectedCat}</strong>.</p>
+              <p className="text-xs sm:text-sm">Tidak ada game yang ditemukan untuk kategori <strong>{selectedCat}</strong>.</p>
               <button
                 onClick={() => setSelectedCat('Beranda')}
                 className="mt-3 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl cursor-pointer"
@@ -1051,33 +1121,33 @@ export default function Home() {
             </div>
           )}
 
-          {/* GRID KARTU KANAN/BAWAH */}
+          {/* GRID KARTU KOLEKSI */}
           {filteredGames.length > 0 && (
             <section className="space-y-3">
-              <h2 className="text-base font-black text-white flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
                 <span>👑</span> Koleksi Game RixxGames ({filteredGames.length})
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
                 {filteredGames.map((game) => (
                   <div
                     key={game.id}
                     onClick={() => setActiveGame(game)}
-                    className="bg-[#0f1523] border border-slate-800 hover:border-cyan-500/80 rounded-2xl p-2.5 cursor-pointer transition hover:-translate-y-1 flex flex-col justify-between group overflow-hidden"
+                    className="bg-[#0f1523] border border-slate-800 hover:border-cyan-500/80 rounded-2xl p-2 sm:p-2.5 cursor-pointer transition active:scale-95 sm:hover:-translate-y-1 flex flex-col justify-between group overflow-hidden"
                   >
-                    <div className="h-32 w-full rounded-xl overflow-hidden relative">
+                    <div className="h-28 sm:h-32 w-full rounded-xl overflow-hidden relative">
                       <GameImage
                         src={game.image}
                         alt={game.title}
                         fallbackIcon={game.fallbackIcon}
                         className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                       />
-                      <span className="absolute bottom-1.5 left-1.5 text-[9px] font-black px-1.5 py-0.5 bg-black/70 text-amber-300 rounded backdrop-blur-sm z-10">
+                      <span className="absolute bottom-1.5 left-1.5 text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 bg-black/80 text-amber-300 rounded backdrop-blur-sm z-10">
                         {game.rating}
                       </span>
                     </div>
-                    <div className="mt-2">
-                      <h4 className="font-extrabold text-xs text-white truncate group-hover:text-cyan-300 transition">{game.title}</h4>
-                      <p className="text-[10px] text-slate-400 mt-0.5 truncate">{game.category}</p>
+                    <div className="mt-1.5">
+                      <h4 className="font-extrabold text-[11px] sm:text-xs text-white truncate group-hover:text-cyan-300 transition">{game.title}</h4>
+                      <p className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 truncate">{game.category}</p>
                     </div>
                   </div>
                 ))}
@@ -1091,11 +1161,11 @@ export default function Home() {
       {/* MODAL KOMUNITAS */}
       {showCommunity && (
         <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0f1523] border border-slate-800 w-full max-w-md rounded-3xl p-6 relative shadow-2xl space-y-4">
+          <div className="bg-[#0f1523] border border-slate-800 w-full max-w-md rounded-3xl p-5 sm:p-6 relative shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl">👥</span>
-                <h3 className="font-black text-white text-base">Komunitas RixxGames</h3>
+                <h3 className="font-black text-white text-sm sm:text-base">Komunitas RixxGames</h3>
               </div>
               <button
                 onClick={() => setShowCommunity(false)}
@@ -1114,10 +1184,10 @@ export default function Home() {
                 href="https://discord.com"
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-between p-3.5 rounded-2xl bg-[#161f33] hover:bg-indigo-600/30 border border-slate-700/50 hover:border-indigo-500 transition group"
+                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#161f33] hover:bg-indigo-600/30 border border-slate-700/50 hover:border-indigo-500 transition group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">👾</span>
+                  <span className="text-xl sm:text-2xl">👾</span>
                   <div>
                     <h4 className="font-bold text-xs text-white group-hover:text-indigo-300">Discord Server</h4>
                     <p className="text-[10px] text-slate-400">Diskusi, mabar & turnamen</p>
@@ -1130,10 +1200,10 @@ export default function Home() {
                 href="https://telegram.org"
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-between p-3.5 rounded-2xl bg-[#161f33] hover:bg-cyan-600/30 border border-slate-700/50 hover:border-cyan-500 transition group"
+                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#161f33] hover:bg-cyan-600/30 border border-slate-700/50 hover:border-cyan-500 transition group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">📢</span>
+                  <span className="text-xl sm:text-2xl">📢</span>
                   <div>
                     <h4 className="font-bold text-xs text-white group-hover:text-cyan-300">Channel Telegram</h4>
                     <p className="text-[10px] text-slate-400">Info update & kode redeem</p>
@@ -1146,10 +1216,10 @@ export default function Home() {
                 href="https://whatsapp.com"
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-between p-3.5 rounded-2xl bg-[#161f33] hover:bg-emerald-600/30 border border-slate-700/50 hover:border-emerald-500 transition group"
+                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#161f33] hover:bg-emerald-600/30 border border-slate-700/50 hover:border-emerald-500 transition group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">💬</span>
+                  <span className="text-xl sm:text-2xl">💬</span>
                   <div>
                     <h4 className="font-bold text-xs text-white group-hover:text-emerald-300">Grup WhatsApp</h4>
                     <p className="text-[10px] text-slate-400">Obrolan sesama pemain</p>
@@ -1162,30 +1232,30 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL PLAYER GAME */}
+      {/* MODAL PLAYER GAME RESPONSIF (DAPAT DIMAINKAN DI HP & PC) */}
       {activeGame && (
-        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-6">
+        <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-0 sm:p-4 md:p-6">
           <div 
             ref={gameContainerRef}
-            className="bg-[#0f1523] border border-slate-800 w-full max-w-5xl h-[90vh] rounded-3xl overflow-hidden flex flex-col shadow-2xl relative"
+            className="bg-[#0f1523] border-0 sm:border border-slate-800 w-full max-w-5xl h-[100dvh] sm:h-[90vh] rounded-none sm:rounded-3xl overflow-hidden flex flex-col shadow-2xl relative"
           >
             {/* MODAL HEADER */}
-            <div className="p-4 bg-[#0f1523] border-b border-slate-800 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
+            <div className="p-2.5 sm:p-4 bg-[#0f1523] border-b border-slate-800 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg overflow-hidden shrink-0">
                   <GameImage src={activeGame.image} alt={activeGame.title} fallbackIcon={activeGame.fallbackIcon} className="w-full h-full object-cover" />
                 </div>
-                <div>
-                  <h3 className="font-black text-white text-sm sm:text-base">{activeGame.title}</h3>
-                  <p className="text-[10px] text-cyan-400 font-medium">{activeGame.category}</p>
+                <div className="truncate">
+                  <h3 className="font-black text-white text-xs sm:text-base truncate">{activeGame.title}</h3>
+                  <p className="text-[9px] sm:text-[10px] text-cyan-400 font-medium truncate">{activeGame.category}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
                   onClick={handleToggleFullscreen}
                   title="Mode Layar Penuh (Fullscreen)"
-                  className="px-3 py-1.5 bg-cyan-600/80 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-lg shadow-cyan-600/20 active:scale-95 cursor-pointer"
+                  className="px-2.5 py-1.5 bg-cyan-600/80 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-lg active:scale-95 cursor-pointer"
                 >
                   <span>⛶</span>
                   <span className="hidden sm:inline">Layar Penuh</span>
@@ -1194,37 +1264,36 @@ export default function Home() {
                 <button
                   onClick={() => setActiveGame(null)}
                   title="Tutup Game"
-                  className="w-8 h-8 bg-slate-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center font-bold transition active:scale-95 cursor-pointer"
+                  className="w-7 h-7 sm:w-8 sm:h-8 bg-slate-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition active:scale-95 cursor-pointer"
                 >
                   ✕
                 </button>
               </div>
             </div>
 
-            {/* IFRAME EMBED GAME DENGAN GAMEDISTRIBUTION REFERRER FIX */}
-            <div className="flex-1 bg-black relative">
+            {/* IFRAME EMBED GAME - MULTI DEVICE FIX */}
+            <div className="flex-1 bg-black relative w-full h-full overflow-hidden">
               <iframe
                 src={getEmbedUrl(activeGame.embedUrl)}
                 title={activeGame.title}
                 className="w-full h-full border-0"
-                allow="autoplay; keyboard-auto; gamepad; fullscreen"
+                allow="autoplay; keyboard-auto; gamepad; fullscreen; accelerometer; gyroscope; payment"
                 allowFullScreen
-                referrerPolicy="no-referrer"
               />
             </div>
 
             {/* FOOTER BAR KONTROL */}
-            <div className="p-3 bg-[#0f1523] border-t border-slate-800 text-xs text-slate-400 flex items-center justify-between px-6 shrink-0">
-              <span>🎮 Kontrol: <strong className="text-slate-200">{activeGame.controls}</strong></span>
-              <span className="text-[10px] text-slate-500">RixxGames Engine</span>
+            <div className="p-2 sm:p-3 bg-[#0f1523] border-t border-slate-800 text-[10px] sm:text-xs text-slate-400 flex items-center justify-between px-3 sm:px-6 shrink-0">
+              <span className="truncate max-w-[260px] sm:max-w-none">🎮 Kontrol: <strong className="text-slate-200">{activeGame.controls}</strong></span>
+              <span className="text-[10px] text-slate-500 hidden sm:inline">RixxGames Engine</span>
             </div>
           </div>
         </div>
       )}
 
       {/* FOOTER */}
-      <footer className="border-t border-slate-800/80 py-6 bg-[#060913] text-center text-xs text-slate-500">
-        RixxGames Portal — Platform Game Online Gratis
+      <footer className="border-t border-slate-800/80 py-4 sm:py-6 bg-[#060913] text-center text-[10px] sm:text-xs text-slate-500">
+        RixxGames Portal — Platform Game Online Gratis Multi-Device
       </footer>
     </div>
   );
