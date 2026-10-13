@@ -1,21 +1,33 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
-import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/react';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "RixxGames - Portal Game Online Gratis",
-  description: "Mainkan puluhan game online gratis dan seru langsung dari browser di RixxGames!",
+  title: 'RixxGames — Portal Game Online Gratis Multi-Device',
+  description: 'Mainkan koleksi game HTML5 online gratis terbaik di RixxGames / ArcadeHub tanpa install!',
+  
+  // VERIFIKASI GOOGLE SEARCH CONSOLE (GSC)
+  verification: {
+    google: 'MASUKKAN_KODE_VERIFIKASI_GSC_ANDA', // Contoh: 'a1b2c3d4e5f6g7h8i9j0'
+  },
+
+  // METADATA OPEN GRAPH (MEDIA SOSIAL PREVIEW)
+  openGraph: {
+    title: 'RixxGames — Portal Game Online Gratis Multi-Device',
+    description: 'Mainkan koleksi game HTML5 online gratis terbaik di RixxGames / ArcadeHub!',
+    url: 'https://arcadehub-web-nine.vercel.app',
+    siteName: 'RixxGames ArcadeHub',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80',
+        width: 1200,
+        height: 630,
+        alt: 'RixxGames ArcadeHub Portal',
+      },
+    ],
+    locale: 'id_ID',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
@@ -24,23 +36,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <head>
-        {/* Script Iklan Adsterra (Popunder & Social Bar) */}
-        <Script
-          src="https://pl31802886.profitableratecpmnetwork.com/13/4a/e1/134ae1f6d4c1ec546d9f83699780278e.js"
-          strategy="afterInteractive"
-        />
-        <Script
-          src="https://pl31802887.profitableratecpmnetwork.com/4b/98/b2/4b98b2b42c0031cbbe0d558dc9fcc8c5.js"
-          strategy="afterInteractive"
-        />
-      </head>
-      <body className="min-h-full flex flex-col bg-[#090d16] text-slate-100">
+    <html lang="id">
+      <body>
         {children}
+        {/* VERCEL ANALYTICS */}
+        <Analytics />
       </body>
     </html>
   );
