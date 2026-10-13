@@ -20,6 +20,12 @@ interface Game {
   isBigHero?: boolean;
 }
 
+// Helper untuk memformat URL embed GameDistribution agar tidak terblokir
+function getEmbedUrl(url: string): string {
+  const baseUrl = url.split('?')[0];
+  return `${baseUrl}?gd_sdk_referrer_url=https://gamedistribution.com/`;
+}
+
 // Komponen Gambar dengan Auto-Fallback Penanganan Error
 function GameImage({ src, alt, className, fallbackIcon }: { src: string; alt: string; className: string; fallbackIcon: string }) {
   const [imgSrc, setImgSrc] = useState(src);
@@ -91,7 +97,7 @@ const GAMES: Game[] = [
     description: 'Bertahan hidup dan bangun pulaumu di atas satu blok ajaib yang tak pernah habis!',
     color: 'from-emerald-600 via-green-700 to-slate-950',
     controls: 'WASD = Jalan | Mouse = Hancurkan Blok & Kamera | Spasi = Lompat',
-    embedUrl: 'https://html5.gamedistribution.com/7a4f5e733d4b4de8afba79c38f6ddb18/?gd_sdk_referrer_url=https://gamedistribution.com/games/blockland-oneblock-skyblock/',
+    embedUrl: 'https://html5.gamedistribution.com/7a4f5e733d4b4de8afba79c38f6ddb18/',
     tags: ['baru', 'sedang tren', 'originals', 'meme & bloxy', '5-minute fun'],
     isBigHero: true,
   },
@@ -107,7 +113,7 @@ const GAMES: Game[] = [
     description: 'Ayunkan jaring laba-laba, kalahkan penjahat di jalanan, dan jadilah pahlawan super!',
     color: 'from-red-600 via-blue-900 to-slate-950',
     controls: 'Klik / Touch = Tembak Jaring Laba-laba & Ayunkan Karakter',
-    embedUrl: 'https://html5.gamedistribution.com/58db9e0efb65455ba928d4e8fb270cf2/?gd_sdk_referrer_url=https://gamedistribution.com/games/web-shot:-spider-superhero/',
+    embedUrl: 'https://html5.gamedistribution.com/58db9e0efb65455ba928d4e8fb270cf2/',
     tags: ['adrenaline', 'aksi', 'baru', 'sedang tren'],
   },
   {
@@ -122,7 +128,7 @@ const GAMES: Game[] = [
     description: 'Balapan liar malam hari di sirkuit jalanan kota! Nyalakan nitro dan salip rivalmu.',
     color: 'from-violet-600 via-purple-900 to-slate-950',
     controls: 'WASD / Panah = Kemudi | Shift = Nitro | Spasi = Rem Tangan',
-    embedUrl: 'https://html5.gamedistribution.com/7fd4526a87eb46b9844e0bedd1735772/?gd_sdk_referrer_url=https://gamedistribution.com/games/nitro-speed-2-underground/',
+    embedUrl: 'https://html5.gamedistribution.com/7fd4526a87eb46b9844e0bedd1735772/',
     tags: ['adrenaline', 'sedang tren', 'baru'],
   },
   {
@@ -137,7 +143,7 @@ const GAMES: Game[] = [
     description: 'Bantu Detektif Ava memecahkan teka-teki logika rumit dan temukan petunjuk tersembunyi!',
     color: 'from-purple-600 via-indigo-900 to-slate-950',
     controls: 'Klik / Touch = Ambil Petunjuk & Jawab Teka-teki',
-    embedUrl: 'https://html5.gamedistribution.com/7d69747a7a4b43efbd0c52c17a291c17/?gd_sdk_referrer_url=https://gamedistribution.com/games/detective-ava:-logic-files/',
+    embedUrl: 'https://html5.gamedistribution.com/7d69747a7a4b43efbd0c52c17a291c17/',
     tags: ['train your brain', 'originals', 'petualangan', 'baru'],
   },
   {
@@ -152,7 +158,7 @@ const GAMES: Game[] = [
     description: 'Tanam sayuran, rawat hewan ternak, dan kembangkan pertanian impian milikmu sendiri!',
     color: 'from-green-600 via-emerald-800 to-slate-950',
     controls: 'WASD / Drag Mouse = Kendalikan Petani & Panen Hasil',
-    embedUrl: 'https://html5.gamedistribution.com/1e48218939b048bc842bd6f715f54b7e/?gd_sdk_referrer_url=https://gamedistribution.com/games/my-perfect-farm/',
+    embedUrl: 'https://html5.gamedistribution.com/1e48218939b048bc842bd6f715f54b7e/',
     tags: ['petualangan', 'originals', '5-minute fun', 'baru'],
   },
   {
@@ -167,7 +173,7 @@ const GAMES: Game[] = [
     description: 'Pilih gaun dan gaya riasan bertema musim gugur yang hangat dan elegan!',
     color: 'from-amber-600 via-orange-800 to-slate-950',
     controls: 'Klik / Touch = Pilih Baju & Riasan',
-    embedUrl: 'https://html5.gamedistribution.com/97194fe2e1f9449c96dcebabc4bcd2d5/?gd_sdk_referrer_url=https://gamedistribution.com/games/fall-aesthetics/',
+    embedUrl: 'https://html5.gamedistribution.com/97194fe2e1f9449c96dcebabc4bcd2d5/',
     tags: ['5-minute fun', 'originals', 'baru'],
   },
   {
@@ -182,7 +188,7 @@ const GAMES: Game[] = [
     description: 'Dandani Barbee dengan outfit paling hits dan unggah foto terbaik ke media sosial!',
     color: 'from-pink-600 via-rose-800 to-slate-950',
     controls: 'Klik / Touch = Pilih Baju & Aksesoris',
-    embedUrl: 'https://html5.gamedistribution.com/ca19e322d99f418abaacfd7d7eb2413e/?gd_sdk_referrer_url=https://gamedistribution.com/games/barbee-fashion-influencer/',
+    embedUrl: 'https://html5.gamedistribution.com/ca19e322d99f418abaacfd7d7eb2413e/',
     tags: ['5-minute fun', 'originals', 'baru'],
   },
   {
@@ -197,7 +203,7 @@ const GAMES: Game[] = [
     description: 'Pertandingan tenis meja cepat! Kendalikan paddle dan kembalikan pukulan lawan.',
     color: 'from-emerald-600 via-teal-800 to-slate-950',
     controls: 'Geser Mouse / Touch = Kendalikan Paddle',
-    embedUrl: 'https://html5.gamedistribution.com/e4c9e60f98f44f18bd78b56b4cc110b8/?gd_sdk_referrer_url=https://gamedistribution.com/games/paddle-rush/',
+    embedUrl: 'https://html5.gamedistribution.com/e4c9e60f98f44f18bd78b56b4cc110b8/',
     tags: ['sports', '5-minute fun', 'adrenaline', 'baru'],
   },
   {
@@ -212,7 +218,7 @@ const GAMES: Game[] = [
     description: 'Asah otakmu dengan memecahkan persamaan matematika sesuai urutan operasi yang tepat!',
     color: 'from-blue-600 via-cyan-800 to-slate-950',
     controls: 'Klik Angka & Operator untuk Menjawab',
-    embedUrl: 'https://html5.gamedistribution.com/560f896d260d4ad4a14e4e64466ec043/?gd_sdk_referrer_url=https://gamedistribution.com/games/order-of-operation-challenge/',
+    embedUrl: 'https://html5.gamedistribution.com/560f896d260d4ad4a14e4e64466ec043/',
     tags: ['train your brain', 'timeless classics', 'baru'],
   },
   {
@@ -227,7 +233,7 @@ const GAMES: Game[] = [
     description: 'Gabungkan hewan-hewan lucu yang sejenis untuk membuka spesies hewan baru yang lebih besar!',
     color: 'from-amber-500 via-orange-700 to-slate-950',
     controls: 'Klik & Arahkan = Jatuhkan Hewan ke Wadah',
-    embedUrl: 'https://html5.gamedistribution.com/a10a40a005fc4eb9ac97bb38b2836488/?gd_sdk_referrer_url=https://gamedistribution.com/games/animals-merge-1/',
+    embedUrl: 'https://html5.gamedistribution.com/a10a40a005fc4eb9ac97bb38b2836488/',
     tags: ['match & merge', '5-minute fun', 'baru'],
   },
   {
@@ -242,7 +248,7 @@ const GAMES: Game[] = [
     description: 'Kendarai motor balap melintasi lalu lintas kota padat dengan kecepatan tinggi!',
     color: 'from-cyan-600 via-blue-800 to-slate-950',
     controls: 'WASD / Panah = Gas & Kemudi Motor | Shift = Nitro',
-    embedUrl: 'https://html5.gamedistribution.com/ee9daf29916348fb8f4450f2c387bf6a/?gd_sdk_referrer_url=https://gamedistribution.com/games/moto-race-city/',
+    embedUrl: 'https://html5.gamedistribution.com/ee9daf29916348fb8f4450f2c387bf6a/',
     tags: ['adrenaline', '5-minute fun', 'baru'],
   },
   {
@@ -257,7 +263,7 @@ const GAMES: Game[] = [
     description: 'Buat konten video viral, kumpulkan jutaan subscriber, dan bangun studio vlog milikmu!',
     color: 'from-red-600 via-rose-800 to-slate-950',
     controls: 'Klik / Touch = Buat Video & Upgrade Peralatan',
-    embedUrl: 'https://html5.gamedistribution.com/691de0022ff340a4ba95685979b14a97/?gd_sdk_referrer_url=https://gamedistribution.com/games/idle-vlogger-simulator/',
+    embedUrl: 'https://html5.gamedistribution.com/691de0022ff340a4ba95685979b14a97/',
     tags: ['train your brain', '5-minute fun', 'baru'],
   },
   {
@@ -272,7 +278,7 @@ const GAMES: Game[] = [
     description: 'Nikmati liburan pantai seru bersama keluarga! Mainkan volly pantai, istana pasir, dan renang.',
     color: 'from-sky-600 via-teal-800 to-slate-950',
     controls: 'WASD = Bergerak | Klik / Touch = Interaksi Wahana Pantai',
-    embedUrl: 'https://html5.gamedistribution.com/2f628fd6df1c459ea9a6295b768bfb71/?gd_sdk_referrer_url=https://gamedistribution.com/games/family-simulator-beach-games/',
+    embedUrl: 'https://html5.gamedistribution.com/2f628fd6df1c459ea9a6295b768bfb71/',
     tags: ['olahraga', 'with friends', 'petualangan', 'baru'],
   },
   {
@@ -287,7 +293,7 @@ const GAMES: Game[] = [
     description: 'Rawat dan mainkan anjing peliharaan keluarga! Latih ketangkasan dan jaga kebersihan peliharaanmu.',
     color: 'from-amber-600 via-yellow-800 to-slate-950',
     controls: 'WASD = Jalan | Mouse = Rawat & Main Bersama Anjing',
-    embedUrl: 'https://html5.gamedistribution.com/05ca9719fbc44e73bb8f065eac5b8c9e/?gd_sdk_referrer_url=https://gamedistribution.com/games/family-pet-dog-games/',
+    embedUrl: 'https://html5.gamedistribution.com/05ca9719fbc44e73bb8f065eac5b8c9e/',
     tags: ['petualangan', '5-minute fun', 'baru'],
   },
   {
@@ -302,7 +308,7 @@ const GAMES: Game[] = [
     description: 'Jadi polisi tangguh! Tangkap kriminal di kota dan kelola fasilitas penjara milikmu.',
     color: 'from-blue-600 via-indigo-800 to-slate-950',
     controls: 'WASD = Bergerak | Mouse = Serang & Bidik | Shift = Lari Cepat',
-    embedUrl: 'https://html5.gamedistribution.com/bec940431e0b4cf5af052f9dfe380bab/?gd_sdk_referrer_url=https://gamedistribution.com/games/cop-simulator:-my-prison-3d/',
+    embedUrl: 'https://html5.gamedistribution.com/bec940431e0b4cf5af052f9dfe380bab/',
     tags: ['baru', 'sedang tren', 'adrenaline'],
   },
   {
@@ -317,7 +323,7 @@ const GAMES: Game[] = [
     description: 'Lakukan tendangan bebas akurat, lewati pagar betis musuh, dan cetak gol spektakuler!',
     color: 'from-emerald-600 via-green-800 to-slate-950',
     controls: 'Geser Mouse / Touch = Bidik & Tendang Bola',
-    embedUrl: 'https://html5.gamedistribution.com/53d787c1516d4d9283748aba33ab5ddc/?gd_sdk_referrer_url=https://gamedistribution.com/games/freekick-clash/',
+    embedUrl: 'https://html5.gamedistribution.com/53d787c1516d4d9283748aba33ab5ddc/',
     tags: ['sports', '5-minute fun', 'with friends', 'baru'],
   },
   {
@@ -332,7 +338,7 @@ const GAMES: Game[] = [
     description: 'Meluncur dengan kereta salju futuristik menembus pegunungan salju dan hindari rintangan!',
     color: 'from-cyan-600 via-blue-800 to-slate-950',
     controls: 'Panah Kiri/Kanan atau A/D = Kemudi | Spasi = Lompat',
-    embedUrl: 'https://html5.gamedistribution.com/d295ac2f20aa4eafa9a78e25f11b8656/?gd_sdk_referrer_url=https://gamedistribution.com/games/snow-rider-neo/',
+    embedUrl: 'https://html5.gamedistribution.com/d295ac2f20aa4eafa9a78e25f11b8656/',
     tags: ['adrenaline', 'sedang tren', 'baru'],
   },
   {
@@ -347,7 +353,7 @@ const GAMES: Game[] = [
     description: 'Tembakkan kelereng warna-warni untuk mencocokkan 3 kelereng yang sama sebelum mencapai lubang!',
     color: 'from-purple-600 via-pink-800 to-slate-950',
     controls: 'Klik Mouse / Touch = Bidik & Tembak Kelereng',
-    embedUrl: 'https://html5.gamedistribution.com/1d9078d79d6c410d879f456d658d63fa/?gd_sdk_referrer_url=https://gamedistribution.com/games/zumba-mania/',
+    embedUrl: 'https://html5.gamedistribution.com/1d9078d79d6c410d879f456d658d63fa/',
     tags: ['match & merge', 'timeless classics', '5-minute fun'],
   },
   {
@@ -362,7 +368,7 @@ const GAMES: Game[] = [
     description: 'Balapan mobil tempur di jalan raya! Hancurkan mobil musuh di depanmu dengan meriam peluru.',
     color: 'from-red-600 via-orange-800 to-slate-950',
     controls: 'Geser Mouse / Panah = Kendalikan Mobil & Otomatis Menembak',
-    embedUrl: 'https://html5.gamedistribution.com/ec9b6d7eae374439be31c6e33b1dbaf9/?gd_sdk_referrer_url=https://gamedistribution.com/games/road-fury-racing/',
+    embedUrl: 'https://html5.gamedistribution.com/ec9b6d7eae374439be31c6e33b1dbaf9/',
     tags: ['adrenaline', 'aksi', 'sedang tren'],
   },
   {
@@ -377,7 +383,7 @@ const GAMES: Game[] = [
     description: 'Pacu adrenalin melintasi rintangan parkour rollercoaster bergaya Obby Roblox yang seru!',
     color: 'from-yellow-600 via-amber-800 to-slate-950',
     controls: 'WASD = Bergerak | Spasi = Lompat | Mouse = Putar Kamera',
-    embedUrl: 'https://html5.gamedistribution.com/6322e360cffc45f188d111985753b274/?gd_sdk_referrer_url=https://gamedistribution.com/games/roller-coaster:-obby-race/',
+    embedUrl: 'https://html5.gamedistribution.com/6322e360cffc45f188d111985753b274/',
     tags: ['meme & bloxy', 'adrenaline', 'baru'],
   },
   {
@@ -392,7 +398,7 @@ const GAMES: Game[] = [
     description: 'Lompat dari blok ke blok di atas awan! Uji ketepatan dan kecepatan lompatan parkourmu.',
     color: 'from-sky-600 via-indigo-800 to-slate-950',
     controls: 'WASD = Jalan | Spasi = Lompat | Shift = Lari Cepat',
-    embedUrl: 'https://html5.gamedistribution.com/9f03ee16048840ddb84ecda0f967b51f/?gd_sdk_referrer_url=https://gamedistribution.com/games/skyhop-3d-parkour-adventure/',
+    embedUrl: 'https://html5.gamedistribution.com/9f03ee16048840ddb84ecda0f967b51f/',
     tags: ['baru', 'adrenaline'],
   },
   {
@@ -407,7 +413,7 @@ const GAMES: Game[] = [
     description: 'Pertempuran alien sci-fi seru! Bertahan dari gelombang serangan monster antariksa.',
     color: 'from-purple-700 via-violet-900 to-slate-950',
     controls: 'WASD = Jalan | Klik Kiri = Tembak | R = Reload',
-    embedUrl: 'https://html5.gamedistribution.com/36e45a6d45d44cf6a4a753318b485834/?gd_sdk_referrer_url=https://gamedistribution.com/games/alion-storm/',
+    embedUrl: 'https://html5.gamedistribution.com/36e45a6d45d44cf6a4a753318b485834/',
     tags: ['adrenaline', 'aksi'],
   },
   {
@@ -422,7 +428,7 @@ const GAMES: Game[] = [
     description: 'Bantu hewan-hewan pertanian mencocokkan buah dan sayur segar dalam puzzle Match-3 yang manis!',
     color: 'from-rose-600 via-pink-700 to-slate-950',
     controls: 'Klik & Tahan Mouse / Touch = Tukar Posisi Buah',
-    embedUrl: 'https://html5.gamedistribution.com/629855c7b1d94998885d5af49942fc3c/?gd_sdk_referrer_url=https://gamedistribution.com/games/yummy-tales-2/',
+    embedUrl: 'https://html5.gamedistribution.com/629855c7b1d94998885d5af49942fc3c/',
     tags: ['match & merge', '5-minute fun'],
   },
   {
@@ -437,7 +443,7 @@ const GAMES: Game[] = [
     description: 'Susun dan tumpuk camilan lezat ke dalam wadah yang sesuai dalam teka-teki pemilah makanan.',
     color: 'from-amber-600 via-orange-800 to-slate-950',
     controls: 'Klik / Touch = Ambil & Pindahkan Camilan',
-    embedUrl: 'https://html5.gamedistribution.com/5741b86f56ba443098fe4e0070d14079/?gd_sdk_referrer_url=https://gamedistribution.com/games/snack-stack/',
+    embedUrl: 'https://html5.gamedistribution.com/5741b86f56ba443098fe4e0070d14079/',
     tags: ['train your brain', '5-minute fun'],
   },
   {
@@ -452,7 +458,7 @@ const GAMES: Game[] = [
     description: 'Rapikan dan cocokkan bahan-bahan makanan hotpot di atas piring berputar tepat pada waktunya.',
     color: 'from-red-600 via-amber-800 to-slate-950',
     controls: 'Klik / Touch = Pilih & Geser Bahan Makanan',
-    embedUrl: 'https://html5.gamedistribution.com/1a3645141bb244a288eacb5399838375/?gd_sdk_referrer_url=https://gamedistribution.com/games/hotpot-loop-sort/',
+    embedUrl: 'https://html5.gamedistribution.com/1a3645141bb244a288eacb5399838375/',
     tags: ['train your brain', 'match & merge'],
   },
   {
@@ -467,7 +473,7 @@ const GAMES: Game[] = [
     description: 'Satu-padukan potongan huruf untuk merangkai kata-kata tersembunyi dan asah kosa katamu!',
     color: 'from-blue-600 via-teal-800 to-slate-950',
     controls: 'Drag & Drop = Gabungkan Huruf Menjadi Kata',
-    embedUrl: 'https://html5.gamedistribution.com/4a44ff076ec2476fa91f6717b62f4508/?gd_sdk_referrer_url=https://gamedistribution.com/games/unite-words/',
+    embedUrl: 'https://html5.gamedistribution.com/4a44ff076ec2476fa91f6717b62f4508/',
     tags: ['train your brain', 'timeless classics'],
   },
   {
@@ -482,7 +488,7 @@ const GAMES: Game[] = [
     description: 'Hancurkan blok warna-warni di kebun dan bantu petani mengumpulkan hasil panen yang melimpah!',
     color: 'from-green-600 via-lime-800 to-slate-950',
     controls: 'Klik 2 atau Lebih Blok Warna Sama yang Berdampingan',
-    embedUrl: 'https://html5.gamedistribution.com/61dd710d50e0405f8b94ef531f2d16d0/?gd_sdk_referrer_url=https://gamedistribution.com/games/farm-blast-2/',
+    embedUrl: 'https://html5.gamedistribution.com/61dd710d50e0405f8b94ef531f2d16d0/',
     tags: ['match & merge', '5-minute fun'],
   },
   {
@@ -497,7 +503,7 @@ const GAMES: Game[] = [
     description: 'Gabungkan gelembung-gelembung berisi huruf untuk menyusun kata dan pecahkan gelembungnya!',
     color: 'from-cyan-600 via-indigo-800 to-slate-950',
     controls: 'Klik & Drag Gelembung ke Gelembung dengan Huruf Sama',
-    embedUrl: 'https://html5.gamedistribution.com/db6824b2c52c4bf081628b1804713c18/?gd_sdk_referrer_url=https://gamedistribution.com/games/bubble-merge:-word-sort/',
+    embedUrl: 'https://html5.gamedistribution.com/db6824b2c52c4bf081628b1804713c18/',
     tags: ['train your brain', 'match & merge'],
   },
   {
@@ -512,7 +518,7 @@ const GAMES: Game[] = [
     description: 'Bertahan hidup di tengah lautan luas di atas rakit kayu! Kumpulkan bahan kayu dan lawan hiu buas.',
     color: 'from-teal-600 via-blue-900 to-slate-950',
     controls: 'WASD = Berenang & Kendalikan Rakit | Klik = Ambil Barang',
-    embedUrl: 'https://html5.gamedistribution.com/eb25eb69dac34cf185ec391c93119f28/?gd_sdk_referrer_url=https://gamedistribution.com/games/sea-survivor/',
+    embedUrl: 'https://html5.gamedistribution.com/eb25eb69dac34cf185ec391c93119f28/',
     tags: ['adrenaline', 'baru', 'petualangan'],
   },
   {
@@ -527,7 +533,7 @@ const GAMES: Game[] = [
     description: 'Jelajahi pemandangan dunia secara acak dan tebak lokasi geografis kamu di peta dunia!',
     color: 'from-emerald-600 via-teal-900 to-slate-950',
     controls: 'Mouse = Putar Pandangan | Klik Peta = Pasang Pin Lokasi',
-    embedUrl: 'https://html5.gamedistribution.com/fef00656129743768437b7589b7c48b1/?gd_sdk_referrer_url=https://gamedistribution.com/games/worldguessr/',
+    embedUrl: 'https://html5.gamedistribution.com/fef00656129743768437b7589b7c48b1/',
     tags: ['train your brain', 'multiplayer', 'with friends'],
   },
   {
@@ -542,7 +548,7 @@ const GAMES: Game[] = [
     description: 'Kelola salon kecantikan dan tata busana! Dandani para model cantik tepat waktu sesuai permintaan.',
     color: 'from-pink-500 via-purple-700 to-slate-950',
     controls: 'Klik / Touch = Pilih Riasan Wajah & Baju Model',
-    embedUrl: 'https://html5.gamedistribution.com/40f5033d63884627919f0fa3ecfa4bd1/?gd_sdk_referrer_url=https://gamedistribution.com/games/fashion-makeover-dash/',
+    embedUrl: 'https://html5.gamedistribution.com/40f5033d63884627919f0fa3ecfa4bd1/',
     tags: ['5-minute fun', 'originals'],
   },
   {
@@ -557,7 +563,7 @@ const GAMES: Game[] = [
     description: 'Aksi drift mobil di lintasan ekstrim! Kuasai setiap belokan dan ukir rekor kecepatan.',
     color: 'from-pink-600 via-rose-700 to-slate-950',
     controls: 'Panah / WASD = Kendarai & Drift | Spasi = Rem Tangan',
-    embedUrl: 'https://html5.gamedistribution.com/ab60bc6ce67147f0bf5bf60475b5cde3/?gd_sdk_referrer_url=https://gamedistribution.com/games/driftline/',
+    embedUrl: 'https://html5.gamedistribution.com/ab60bc6ce67147f0bf5bf60475b5cde3/',
     tags: ['adrenaline', 'sedang tren', '5-minute fun'],
   },
   {
@@ -572,7 +578,7 @@ const GAMES: Game[] = [
     description: 'Keluarlah dari laboratorium rahasia penuh wabah zombie dan tembak musuh untuk lolos!',
     color: 'from-red-600 via-purple-900 to-slate-950',
     controls: 'WASD = Jalan | Klik Kiri = Tembak | R = Isi Peluru',
-    embedUrl: 'https://html5.gamedistribution.com/9494abb6e0404e7b8a18e92b13869faf/?gd_sdk_referrer_url=https://gamedistribution.com/games/patient-zero:-escape/',
+    embedUrl: 'https://html5.gamedistribution.com/9494abb6e0404e7b8a18e92b13869faf/',
     tags: ['adrenaline', 'baru'],
   },
   {
@@ -587,7 +593,7 @@ const GAMES: Game[] = [
     description: 'Pertempuran tank futuristik di luar angkasa! Hancurkan skuadron tank musuh.',
     color: 'from-cyan-600 via-blue-800 to-slate-950',
     controls: 'WASD = Gerak Tank | Mouse = Arahkan & Tembak Meriam',
-    embedUrl: 'https://html5.gamedistribution.com/86126926e74249eeb2a38d393344bad7/?gd_sdk_referrer_url=https://gamedistribution.com/games/galaxy-tank-battle/',
+    embedUrl: 'https://html5.gamedistribution.com/86126926e74249eeb2a38d393344bad7/',
     tags: ['multiplayer', 'with friends', 'adrenaline'],
   },
   {
@@ -602,7 +608,7 @@ const GAMES: Game[] = [
     description: 'Bangun kerajaan mini milikmu, rekrut pasukan tangguh, dan bangun peradaban besar!',
     color: 'from-amber-600 via-yellow-700 to-slate-950',
     controls: 'Klik Mouse / Touch = Kelola Bangunan & Pasukan',
-    embedUrl: 'https://html5.gamedistribution.com/2265b52cef6e45b695bbc545805ae094/?gd_sdk_referrer_url=https://gamedistribution.com/games/tiny-kingdoms/',
+    embedUrl: 'https://html5.gamedistribution.com/2265b52cef6e45b695bbc545805ae094/',
     tags: ['match & merge', 'originals', 'train your brain'],
   },
   {
@@ -617,7 +623,7 @@ const GAMES: Game[] = [
     description: 'Teka-teki susunan kartu mahjong klasik dengan tema kastil Twilight yang tenang.',
     color: 'from-indigo-600 via-purple-800 to-slate-950',
     controls: 'Klik Pasangan Kartu Mahjong yang Sama',
-    embedUrl: 'https://html5.gamedistribution.com/a2f201c7260c4f139c3884832eed6036/?gd_sdk_referrer_url=https://gamedistribution.com/games/twilight-mahjong-manor/',
+    embedUrl: 'https://html5.gamedistribution.com/a2f201c7260c4f139c3884832eed6036/',
     tags: ['train your brain', 'timeless classics'],
   },
   {
@@ -632,7 +638,7 @@ const GAMES: Game[] = [
     description: 'Adu salto dan tebasan senjata dalam pertarungan duel melompat yang penuh aksi fisika!',
     color: 'from-violet-600 via-fuchsia-800 to-slate-950',
     controls: 'Klik Kiri / Spasi = Salto & Tebas Senjata Musuh',
-    embedUrl: 'https://html5.gamedistribution.com/d48120b598174ba48e3d35e2733fa575/?gd_sdk_referrer_url=https://gamedistribution.com/games/flip-duel/',
+    embedUrl: 'https://html5.gamedistribution.com/d48120b598174ba48e3d35e2733fa575/',
     tags: ['multiplayer', 'with friends', '5-minute fun'],
   },
   {
@@ -647,7 +653,7 @@ const GAMES: Game[] = [
     description: 'Kendalikan truk legendaris ZIL dan lakukan manuver drift di jalanan penuh tantangan.',
     color: 'from-orange-600 via-amber-800 to-slate-950',
     controls: 'WASD / Panah = Kendalikan Truk & Drift',
-    embedUrl: 'https://html5.gamedistribution.com/632cb61a2b174120b657a2b32dfb1f4f/?gd_sdk_referrer_url=https://gamedistribution.com/games/hustle-and-drift-in-zil/',
+    embedUrl: 'https://html5.gamedistribution.com/632cb61a2b174120b657a2b32dfb1f4f/',
     tags: ['adrenaline', 'sedang tren'],
   },
   {
@@ -662,7 +668,7 @@ const GAMES: Game[] = [
     description: 'Rasakan sensasi memancing ikan-ikan eksotis di danau serta sungai Rusia yang tenang.',
     color: 'from-cyan-600 via-teal-800 to-slate-950',
     controls: 'Klik Mouse / Touch = Lempar Umpan & Tarik Kail',
-    embedUrl: 'https://html5.gamedistribution.com/3a935e65bc2844558b7051d63246a51d/?gd_sdk_referrer_url=https://gamedistribution.com/games/fishing-the-russian-way/',
+    embedUrl: 'https://html5.gamedistribution.com/3a935e65bc2844558b7051d63246a51d/',
     tags: ['5-minute fun', 'timeless classics'],
   },
   {
@@ -677,7 +683,7 @@ const GAMES: Game[] = [
     description: 'Kelola supermarket 3D milikmu sendiri, tata rak produk, layani pelanggan, dan kembangkan bisnismu!',
     color: 'from-teal-600 via-emerald-800 to-slate-950',
     controls: 'WASD / Panah = Jalan | Mouse / Touch = Ambil & Tata Barang',
-    embedUrl: 'https://html5.gamedistribution.com/8da6f454aceb4c1b9c7a0644f020d6ca/?gd_sdk_referrer_url=https://gamedistribution.com/games/3d-supermarket-tycoon/',
+    embedUrl: 'https://html5.gamedistribution.com/8da6f454aceb4c1b9c7a0644f020d6ca/',
     tags: ['match & merge', 'originals', 'train your brain'],
   },
   {
@@ -692,7 +698,7 @@ const GAMES: Game[] = [
     description: 'Jelajahi lorong misterius Backrooms yang mengerikan, tembak entitas seram, dan temukan jalan keluar!',
     color: 'from-yellow-700 via-amber-900 to-slate-950',
     controls: 'WASD = Jalan | Mouse = Bidik & Tembak | Shift = Lari',
-    embedUrl: 'https://html5.gamedistribution.com/524a77b916a44e5fbae2bb94651986e7/?gd_sdk_referrer_url=https://gamedistribution.com/games/terror-in-backrooms-valley/',
+    embedUrl: 'https://html5.gamedistribution.com/524a77b916a44e5fbae2bb94651986e7/',
     tags: ['adrenaline', 'baru', 'meme & bloxy'],
   },
   {
@@ -707,7 +713,7 @@ const GAMES: Game[] = [
     description: 'Kendarai pelbagai mobil super di kota malam yang megah dan parkirkan dengan mulus tanpa lecet!',
     color: 'from-indigo-700 via-blue-900 to-slate-950',
     controls: 'Panah / WASD = Kemudikan Mobil | Spasi = Rem Tangan',
-    embedUrl: 'https://html5.gamedistribution.com/13d99dac275842e1a64a13332962fbd1/?gd_sdk_referrer_url=https://gamedistribution.com/games/parking-fury-3d:-night-city/',
+    embedUrl: 'https://html5.gamedistribution.com/13d99dac275842e1a64a13332962fbd1/',
     tags: ['adrenaline', '5-minute fun'],
   },
   {
@@ -722,7 +728,7 @@ const GAMES: Game[] = [
     description: 'Aksi turun meluncur menembus rintangan ruang misterius dalam kecepatan tinggi!',
     color: 'from-purple-700 via-pink-900 to-slate-950',
     controls: 'A/D atau Panah Kiri-Kanan = Hindari Rintangan',
-    embedUrl: 'https://html5.gamedistribution.com/0df4c3adb032460791d0ca844d09313d/?gd_sdk_referrer_url=https://gamedistribution.com/games/descent/',
+    embedUrl: 'https://html5.gamedistribution.com/0df4c3adb032460791d0ca844d09313d/',
     tags: ['adrenaline', 'baru'],
   },
   {
@@ -737,7 +743,7 @@ const GAMES: Game[] = [
     description: 'Pertandingan tenis seru! Lakukan smash keras, pukulan spin, dan kalahkan petenis terbaik dunia.',
     color: 'from-green-600 via-lime-700 to-slate-950',
     controls: 'WASD / Panah = Bergerak | X/Z = Pukul Bola / Smash',
-    embedUrl: 'https://html5.gamedistribution.com/ab2f156d72894fd8a5dedb85b34a05e4/?gd_sdk_referrer_url=https://gamedistribution.com/games/tennis-masters-2026/',
+    embedUrl: 'https://html5.gamedistribution.com/ab2f156d72894fd8a5dedb85b34a05e4/',
     tags: ['multiplayer', 'with friends', '5-minute fun'],
   },
   {
@@ -752,7 +758,7 @@ const GAMES: Game[] = [
     description: 'RPG fantasi epik! Pimpin pahlawanmu bertarung melawan naga dan kegelapan kerajaan.',
     color: 'from-red-700 via-amber-900 to-slate-950',
     controls: 'Klik Mouse = Gunakan Skill & Arahkan Pasukan',
-    embedUrl: 'https://html5.gamedistribution.com/6f6471ecbc2447d29aa1173e591448e3/?gd_sdk_referrer_url=https://gamedistribution.com/games/eternal-fury/',
+    embedUrl: 'https://html5.gamedistribution.com/6f6471ecbc2447d29aa1173e591448e3/',
     tags: ['originals', 'sedang tren'],
   },
   {
@@ -767,7 +773,7 @@ const GAMES: Game[] = [
     description: 'Masak hidangan lezat, layani pelanggan restoran tepat waktu, dan hias rumah impian keluargamu!',
     color: 'from-orange-500 via-rose-700 to-slate-950',
     controls: 'Klik / Tap = Masak & Sajikan Makanan',
-    embedUrl: 'https://html5.gamedistribution.com/9bf2e82f7c684bdcb0a8f4fa3ec0ecd6/?gd_sdk_referrer_url=https://gamedistribution.com/games/virtual-families-cook-off-1/',
+    embedUrl: 'https://html5.gamedistribution.com/9bf2e82f7c684bdcb0a8f4fa3ec0ecd6/',
     tags: ['match & merge', '5-minute fun', 'train your brain'],
   },
   {
@@ -782,7 +788,7 @@ const GAMES: Game[] = [
     description: 'Gabungan gaya galian blok voxel Craft dengan dunia mistik Backrooms yang seru!',
     color: 'from-yellow-600 via-amber-800 to-slate-950',
     controls: 'WASD = Jalan | Klik Kiri = Tambang Blok | Klik Kanan = Pasang Blok',
-    embedUrl: 'https://html5.gamedistribution.com/20dfeaed02c9409f9d5a5927d67a6f3a/?gd_sdk_referrer_url=https://gamedistribution.com/games/backrooms-craft/',
+    embedUrl: 'https://html5.gamedistribution.com/20dfeaed02c9409f9d5a5927d67a6f3a/',
     tags: ['meme & bloxy', 'baru'],
   },
   {
@@ -797,7 +803,7 @@ const GAMES: Game[] = [
     description: 'Lakukan atraksi jumping motor ekstrim menembus rintangan arena balap motor bertingkat!',
     color: 'from-sky-600 via-cyan-800 to-slate-950',
     controls: 'WASD / Panah = Gas & Seimbangkan Motor di Udara',
-    embedUrl: 'https://html5.gamedistribution.com/2062e395d192424690690a3d0783d27f/?gd_sdk_referrer_url=https://gamedistribution.com/games/bike-games:-stunt-bike-racing/',
+    embedUrl: 'https://html5.gamedistribution.com/2062e395d192424690690a3d0783d27f/',
     tags: ['adrenaline', 'sedang tren'],
   },
   {
@@ -812,7 +818,7 @@ const GAMES: Game[] = [
     description: 'Tarik busur panahmu, bidik target monster yang mendekat, dan lepaskan panah mematikan!',
     color: 'from-emerald-600 via-teal-800 to-slate-950',
     controls: 'Tahan & Geser Mouse = Bidik | Lepas = Tembak Panah',
-    embedUrl: 'https://html5.gamedistribution.com/c2ce1cd65ca649abbc6b940a0adf3227/?gd_sdk_referrer_url=https://gamedistribution.com/games/archer-vs-monsters/',
+    embedUrl: 'https://html5.gamedistribution.com/c2ce1cd65ca649abbc6b940a0adf3227/',
     tags: ['5-minute fun', 'train your brain'],
   },
   {
@@ -827,7 +833,7 @@ const GAMES: Game[] = [
     description: 'Petualangan teka-teki pemrograman interaktif! Selesaikan algoritma untuk memandu karakter lolos.',
     color: 'from-purple-600 via-indigo-800 to-slate-950',
     controls: 'Klik / Drag Blok Kode logika untuk menjalankan perintah',
-    embedUrl: 'https://html5.gamedistribution.com/ef53683d27f74dc38f75f407ff351bc0/?gd_sdk_referrer_url=https://gamedistribution.com/games/codequest/',
+    embedUrl: 'https://html5.gamedistribution.com/ef53683d27f74dc38f75f407ff351bc0/',
     tags: ['train your brain', 'originals', 'timeless classics'],
   },
 ];
@@ -1195,10 +1201,10 @@ export default function Home() {
               </div>
             </div>
 
-            {/* IFRAME EMBED GAME DENGAN REFERRER POLICY FIX */}
+            {/* IFRAME EMBED GAME DENGAN GAMEDISTRIBUTION REFERRER FIX */}
             <div className="flex-1 bg-black relative">
               <iframe
-                src={activeGame.embedUrl}
+                src={getEmbedUrl(activeGame.embedUrl)}
                 title={activeGame.title}
                 className="w-full h-full border-0"
                 allow="autoplay; keyboard-auto; gamepad; fullscreen"
