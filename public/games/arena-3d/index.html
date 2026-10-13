@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Arena Combat 3D - Gladiator Wave Survival</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden; background: #0c0a09;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none; -webkit-user-select: none;
+    }
+    
+    canvas { display: block; width: 100vw; height: 100vh; }
+
+    #loading {
+      position: absolute; inset: 0; background: #1c1917; z-index: 100;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;
+      transition: opacity 0.3s ease;
+    }
+    .spinner {
+      width: 44px; height: 44px; border: 3px solid #44403c; border-top-color: #f59e0b;
+      border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ROMAN GLADIATOR HUD */
+    #hud {
+      position: absolute; top: 16px; left: 16px; z-index: 10; pointer-events: none;
+    }
+    .card-hud {
+      background: rgba(28, 25, 23, 0.88); backdrop-filter: blur(10px);
+      border: 1px solid rgba(245, 158, 11, 0.3); padding: 12px 18px; border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6); color: #fff; width: 220px;
+    }
+    .hp-bg {
+      width: 100%; height: 12px; background: #27272a; border-radius: 6px; overflow: hidden;
+      margin: 6px 0; border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .hp-fill { height: 100%; background: linear-gradient(90deg, #dc2626, #ef4444); transition: width 0.15s ease; }
+    .stamina-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); transition: width 0.15s ease; }
+
+    #wave-banner {
+      position: absolute; top: 16px; right: 16px; z-index: 10; pointer-events: none;
+      background: rgba(28, 25, 23, 0.88); border: 1px solid rgba(245, 158, 11, 0.4);
+      padding: 10px 20px; border-radius: 14px; color: #f59e0b; font-weight: 800; font-size: 14px;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); text-align: right;
+    }
+
+    #announcer {
+      position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); z-index: 20;
+      pointer-events: none; text-align: center; color: #fbbf24; font-size: 28px; font-weight: 900;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9); opacity: 0; transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    #controls-hint {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(28, 25, 23, 0.88); backdrop-filter: blur(8px); padding: 10px 22px;
+      border-radius: 20px; border: 1px solid rgba(245, 158, 11, 0.3); color: #fef3c7; font-size: 12px;
+      pointer-events: none; text-align: center; box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+    }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <div style="font-weight: 700; font-size: 15px; letter-spacing: 1px; color: #f59e0b;">MEMUAT ARENA COLOSSEUM PASIR...</div>
+    <div style="font-size: 12px; color: #a8a29e; margin-top: 4px;">Mode Wave Survival & Tangkisan Perisai</div>
+  </div>
+
+  <div id="hud">
+    <div class="card-hud">
+      <div style="color: #f59e0b; font-weight: 800; font-size: 13px; letter-spacing: 0.5px;">🛡️ GLADIATOR COLOSSEUM</div>
+      <div class="hp-bg"><div id="hp-bar" class="hp-fill" style="width: 100%;"></div></div>
+      <div class="hp-bg" style="height: 6px;"><div id="stamina-bar" class="stamina-fill" style="width: 100%;"></div></div>
+      <div style="font-size: 11px; color: #a8a29e; margin-top: 4px; display: flex; justify-content: space-between;">
+        <span>SKOR: <strong id="score" style="color:#f59e0b;">0</strong></span>
+        <span>COMBO: <strong id="combo" style="color:#38bdf8;">1x</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="wave-banner">
+    <div>GELOMBANG <span id="wave-num" style="font-size: 18px; color: #fff;">1</span></div>
+    <div style="font-size: 10px; color: #a8a29e; font-weight: 600;">SISA MUSUH: <span id="enemy-left" style="color: #ef4444;">0</span></div>
+  </div>
+
+  <div id="announcer">GELOMBANG 1 DIMULAI!</div>
+
+  <div id="controls-hint">
+    🖱️ <strong>Drag Mouse</strong> = Kamera 360° | 🎮 <strong>WASD</strong> = Jalan | ⚔️ <strong>Klik Kiri / Spasi</strong> = Tebas Pedang | 🛡️ <strong>Shift / Klik Kanan</strong> = Tahan Perisai
+  </div>
+
+  <script>
+    // 1. SCENE TERANG (DAYLIGHT COLOSSEUM PASIR)
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x38bdf8); // Sky blue
+    scene.fog = new THREE.FogExp2(0x38bdf8, 0.012);
+
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 90);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    document.body.appendChild(renderer.domElement);
+
+    // 2. CAHAYA MATAHARI CERAH
+    const ambientLight = new THREE.AmbientLight(0xfff7ed, 1.3);
+    scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfef08a, 2.2);
+    sunLight.position.set(25, 40, 20);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 1024;
+    sunLight.shadow.mapSize.height = 1024;
+    scene.add(sunLight);
+
+    // 3. LANTAI PASIR COLOSSEUM & DINDING PILAR KERAS
+    const floorGeo = new THREE.PlaneGeometry(90, 90);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.9, metalness: 0.1 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Ring Dinding Colosseum
+    const wallGeo = new THREE.CylinderGeometry(42, 42, 6, 32, 1, true);
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8, side: THREE.DoubleSide });
+    const wall = new THREE.Mesh(wallGeo, wallMat);
+    wall.position.y = 3;
+    scene.add(wall);
+
+    // Pilar Colosseum
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const pillarG = new THREE.CylinderGeometry(1.2, 1.4, 8, 12);
+      const pillarM = new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.5 });
+      const pillar = new THREE.Mesh(pillarG, pillarM);
+      pillar.position.set(Math.cos(angle) * 38, 4, Math.sin(angle) * 38);
+      pillar.castShadow = true;
+      scene.add(pillar);
+    }
+
+    // 4. MODEL GLADIATOR DENGAN PEDANG & PERISAI
+    function createGladiatorPlayer() {
+      const gladiator = new THREE.Group();
+
+      // Baju Zirah Emas/Cokelat
+      const bodyGeo = new THREE.CylinderGeometry(0.45, 0.35, 1.0, 10);
+      const armorMat = new THREE.MeshStandardMaterial({ color: 0xb45309, metalness: 0.7, roughness: 0.3 });
+      const body = new THREE.Mesh(bodyGeo, armorMat);
+      body.position.y = 1.0;
+      body.castShadow = true;
+      gladiator.add(body);
+
+      // Helm Gladiator Dengan Crest Merah
+      const helmGeo = new THREE.SphereGeometry(0.32, 12, 12);
+      const helmMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.9, roughness: 0.2 });
+      const helm = new THREE.Mesh(helmGeo, helmMat);
+      helm.position.y = 1.8;
+      helm.castShadow = true;
+      gladiator.add(helm);
+
+      const crestGeo = new THREE.BoxGeometry(0.08, 0.4, 0.6);
+      const crestMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
+      const crest = new THREE.Mesh(crestGeo, crestMat);
+      crest.position.set(0, 2.05, 0);
+      gladiator.add(crest);
+
+      // Kaki L & R
+      const limbMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.6 });
+      const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.8), limbMat);
+      legL.position.set(-0.2, 0.4, 0);
+      legL.castShadow = true;
+      gladiator.add(legL);
+
+      const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.8), limbMat);
+      legR.position.set(0.2, 0.4, 0);
+      legR.castShadow = true;
+      gladiator.add(legR);
+
+      // Lengan Kanan (Pedang Gladius)
+      const armRGroup = new THREE.Group();
+      armRGroup.position.set(0.5, 1.35, 0);
+      const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.08, 0.7), limbMat);
+      armR.position.y = -0.3;
+      armRGroup.add(armR);
+
+      const swordGroup = new THREE.Group();
+      const bladeMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, metalness: 0.95, roughness: 0.1 });
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.5, 0.04), bladeMat);
+      blade.position.y = 0.75;
+      blade.castShadow = true;
+      swordGroup.add(blade);
+      swordGroup.position.set(0, -0.4, 0.2);
+      swordGroup.rotation.x = Math.PI / 3;
+      armRGroup.add(swordGroup);
+      gladiator.add(armRGroup);
+
+      // Lengan Kiri (PERISAI ROMA / SHIELD)
+      const armLGroup = new THREE.Group();
+      armLGroup.position.set(-0.5, 1.35, 0);
+      const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.08, 0.7), limbMat);
+      armL.position.y = -0.3;
+      armLGroup.add(armL);
+
+      const shieldGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.08, 16);
+      const shieldMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, metalness: 0.5, roughness: 0.3 });
+      const shield = new THREE.Mesh(shieldGeo, shieldMat);
+      shield.rotation.x = Math.PI / 2;
+      shield.position.set(0, -0.2, -0.25);
+      shield.castShadow = true;
+      armLGroup.add(shield);
+      gladiator.add(armLGroup);
+
+      return { mesh: gladiator, armR: armRGroup, armL: armLGroup, shield, legL, legR };
+    }
+
+    const player = createGladiatorPlayer();
+    scene.add(player.mesh);
+
+    // EFEK CIPRATAN PASIR & BENTURAN PERISAI
+    const particleCount = 25;
+    const particleGeo = new THREE.BufferGeometry();
+    const particlePos = new Float32Array(particleCount * 3);
+    const particleVels = [];
+    for (let i = 0; i < particleCount; i++) {
+      particlePos[i * 3] = 0; particlePos[i * 3 + 1] = -10; particlePos[i * 3 + 2] = 0;
+      particleVels.push(new THREE.Vector3());
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+    const particleMat = new THREE.PointsMaterial({ color: 0xfef08a, size: 0.22, transparent: true, opacity: 0 });
+    const particleSystem = new THREE.Points(particleGeo, particleMat);
+    scene.add(particleSystem);
+
+    function triggerSparks(pos) {
+      particleMat.opacity = 1.0;
+      const positions = particleSystem.geometry.attributes.position.array;
+      for (let i = 0; i < particleCount; i++) {
+        positions[i * 3] = pos.x; positions[i * 3 + 1] = pos.y + 1; positions[i * 3 + 2] = pos.z;
+        particleVels[i].set((Math.random() - 0.5) * 6, Math.random() * 5 + 1, (Math.random() - 0.5) * 6);
+      }
+      particleSystem.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // 5. MUSUH PRAJURIT MUSUH (GLADIATOR HITAM)
+    function createEnemyGladiator() {
+      const enemy = new THREE.Group();
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.5, metalness: 0.5 });
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.32, 1.0, 10), bodyMat);
+      body.position.y = 1.0;
+      body.castShadow = true;
+      enemy.add(body);
+
+      const helm = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 10), new THREE.MeshStandardMaterial({ color: 0x111827 }));
+      helm.position.y = 1.75;
+      enemy.add(helm);
+
+      const limbMat = new THREE.MeshStandardMaterial({ color: 0x111827 });
+      const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.8), limbMat);
+      legL.position.set(-0.2, 0.4, 0);
+      enemy.add(legL);
+
+      const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.8), limbMat);
+      legR.position.set(0.2, 0.4, 0);
+      enemy.add(legR);
+
+      const weapon = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.4, 0.04), new THREE.MeshStandardMaterial({ color: 0x9ca3af }));
+      weapon.position.set(0.5, 1.0, -0.3);
+      enemy.add(weapon);
+
+      return { mesh: enemy, legL, legR };
+    }
+
+    // LOGIKA SYSTEM GELOMBANG (WAVE SURVIVAL)
+    let wave = 1;
+    let waveEnemiesRemaining = 3;
+    let activeEnemies = [];
+    let score = 0;
+    let combo = 1;
+
+    function announce(msg) {
+      const el = document.getElementById('announcer');
+      el.innerText = msg;
+      el.style.opacity = '1';
+      el.style.transform = 'translate(-50%, -50%) scale(1.1)';
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translate(-50%, -50%) scale(0.9)';
+      }, 1800);
+    }
+
+    function spawnWaveEnemy() {
+      if (waveEnemiesRemaining <= 0 || activeEnemies.length >= 5) return;
+
+      const eData = createEnemyGladiator();
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 15 + Math.random() * 10;
+      eData.mesh.position.set(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
+
+      scene.add(eData.mesh);
+      activeEnemies.push({ mesh: eData.mesh, hp: 40 + wave * 10, legL: eData.legL, legR: eData.legR });
+      waveEnemiesRemaining--;
+      document.getElementById('enemy-left').innerText = activeEnemies.length + waveEnemiesRemaining;
+    }
+
+    function startWave() {
+      waveEnemiesRemaining = 3 + wave * 2;
+      document.getElementById('wave-num').innerText = wave;
+      document.getElementById('enemy-left').innerText = waveEnemiesRemaining;
+      announce('GELOMBANG ' + wave + ' DIMULAI!');
+    }
+
+    startWave();
+    setInterval(spawnWaveEnemy, 2500);
+
+    setTimeout(() => {
+      document.getElementById('loading').style.opacity = '0';
+      setTimeout(() => document.getElementById('loading').style.display = 'none', 300);
+    }, 400);
+
+    // 6. KONTROL KAMERA & MEKANIK PERISAI TANGKISAN
+    let camYaw = 0, camPitch = 0.35, camDist = 9.5;
+    let isDragging = false, lastX = 0, lastY = 0;
+
+    window.addEventListener('mousedown', e => {
+      if (e.button === 0) { isDragging = true; lastX = e.clientX; lastY = e.clientY; }
+      if (e.button === 2) isBlocking = true; // Klik kanan perisai
+    });
+    window.addEventListener('mouseup', e => {
+      if (e.button === 0) isDragging = false;
+      if (e.button === 2) isBlocking = false;
+    });
+    window.addEventListener('contextmenu', e => e.preventDefault());
+
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      camYaw -= (e.clientX - lastX) * 0.004;
+      camPitch = Math.max(0.1, Math.min(1.1, camPitch + (e.clientY - lastY) * 0.004));
+      lastX = e.clientX; lastY = e.clientY;
+    });
+
+    const keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') isBlocking = true;
+      if (e.code === 'Space') performAttack();
+    });
+    window.addEventListener('keyup', e => {
+      keys[e.code] = false;
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') isBlocking = false;
+    });
+
+    window.addEventListener('click', e => { if (e.button === 0) performAttack(); });
+
+    let isAttacking = false, isBlocking = false;
+    let attackProgress = 0;
+    let playerHp = 100, stamina = 100;
+
+    function performAttack() {
+      if (isAttacking || isBlocking) return;
+      isAttacking = true;
+      attackProgress = 0;
+
+      // Cek Tebasan Ke Musuh
+      activeEnemies.forEach((e, idx) => {
+        const dist = player.mesh.position.distanceTo(e.mesh.position);
+        if (dist < 3.2) {
+          e.hp -= 25;
+          triggerSparks(e.mesh.position);
+
+          if (e.hp <= 0) {
+            scene.remove(e.mesh);
+            activeEnemies.splice(idx, 1);
+            score += 100 * combo;
+            combo++;
+            document.getElementById('score').innerText = score;
+            document.getElementById('combo').innerText = combo + 'x';
+            document.getElementById('enemy-left').innerText = activeEnemies.length + waveEnemiesRemaining;
+
+            // Cek Gelombang Selesai
+            if (activeEnemies.length === 0 && waveEnemiesRemaining === 0) {
+              wave++;
+              playerHp = Math.min(100, playerHp + 25); // Bonus HP saat wave beres
+              document.getElementById('hp-bar').style.width = playerHp + '%';
+              setTimeout(startWave, 2000);
+            }
+          }
+        }
+      });
+    }
+
+    // 7. GAME LOOP UTAMA
+    const clock = new THREE.Clock();
+    let walkCycle = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = Math.min(clock.getDelta(), 0.1);
+
+      if (particleMat.opacity > 0) {
+        particleMat.opacity -= delta * 2;
+        const positions = particleSystem.geometry.attributes.position.array;
+        for (let i = 0; i < particleCount; i++) {
+          positions[i * 3] += particleVels[i].x * delta;
+          positions[i * 3 + 1] += particleVels[i].y * delta;
+          positions[i * 3 + 2] += particleVels[i].z * delta;
+          particleVels[i].y -= 9.8 * delta;
+        }
+        particleSystem.geometry.attributes.position.needsUpdate = true;
+      }
+
+      // Animasi Tebasan Pedang
+      if (isAttacking) {
+        attackProgress += delta * 7;
+        player.armR.rotation.x = -Math.sin(attackProgress * Math.PI) * 1.8;
+        if (attackProgress >= 1) {
+          isAttacking = false;
+          player.armR.rotation.set(0, 0, 0);
+        }
+      }
+
+      // Animasi Tahan Perisai (Shield Blocking)
+      if (isBlocking) {
+        player.armL.rotation.x = THREE.MathUtils.lerp(player.armL.rotation.x, -1.2, 0.2);
+        player.armL.rotation.y = THREE.MathUtils.lerp(player.armL.rotation.y, 0.6, 0.2);
+      } else {
+        player.armL.rotation.x = THREE.MathUtils.lerp(player.armL.rotation.x, 0, 0.2);
+        player.armL.rotation.y = THREE.MathUtils.lerp(player.armL.rotation.y, 0, 0.2);
+      }
+
+      // Pergerakan WASD
+      let inputX = 0, inputZ = 0;
+      if (keys['KeyW'] || keys['ArrowUp']) inputZ -= 1;
+      if (keys['KeyS'] || keys['ArrowDown']) inputZ += 1;
+      if (keys['KeyA'] || keys['ArrowLeft']) inputX -= 1;
+      if (keys['KeyD'] || keys['ArrowRight']) inputX += 1;
+
+      const isMoving = (inputX !== 0 || inputZ !== 0) && !isBlocking;
+
+      if (isMoving) {
+        const sin = Math.sin(camYaw);
+        const cos = Math.cos(camYaw);
+        const dirX = inputX * cos + inputZ * sin;
+        const dirZ = -inputX * sin + inputZ * cos;
+
+        const speed = 7.5;
+        player.mesh.position.x += dirX * speed * delta;
+        player.mesh.position.z += dirZ * speed * delta;
+
+        // Batasi di dalam ring Colosseum
+        const distFromCenter = player.mesh.position.length();
+        if (distFromCenter > 36) {
+          player.mesh.position.clampLength(0, 36);
+        }
+
+        const targetAngle = Math.atan2(dirX, dirZ);
+        const targetQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetAngle);
+        player.mesh.quaternion.slerp(targetQuat, 16 * delta);
+
+        walkCycle += delta * 12;
+        player.legL.rotation.x = Math.sin(walkCycle) * 0.6;
+        player.legR.rotation.x = -Math.sin(walkCycle) * 0.6;
+      } else {
+        player.legL.rotation.x = THREE.MathUtils.lerp(player.legL.rotation.x, 0, 0.2);
+        player.legR.rotation.x = THREE.MathUtils.lerp(player.legR.rotation.x, 0, 0.2);
+      }
+
+      // Update Kamera 360°
+      const cx = player.mesh.position.x + camDist * Math.sin(camYaw) * Math.cos(camPitch);
+      const cy = player.mesh.position.y + camDist * Math.sin(camPitch);
+      const cz = player.mesh.position.z + camDist * Math.cos(camYaw) * Math.cos(camPitch);
+
+      camera.position.set(cx, cy, cz);
+      camera.lookAt(player.mesh.position.x, player.mesh.position.y + 1.2, player.mesh.position.z);
+
+      // Pergerakan Musuh Gladiator Mengejar Player
+      activeEnemies.forEach(e => {
+        const dir = new THREE.Vector3().subVectors(player.mesh.position, e.mesh.position);
+        dir.y = 0;
+        const dist = dir.length();
+        dir.normalize();
+
+        if (dist > 1.6) {
+          e.mesh.position.x += dir.x * (2.2 + wave * 0.2) * delta;
+          e.mesh.position.z += dir.z * (2.2 + wave * 0.2) * delta;
+          e.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+        } else {
+          // Serang Player (Jika menahan perisai, damage berkurang 80%!)
+          const damage = isBlocking ? (3 * delta) : (15 * delta);
+          playerHp -= damage;
+          document.getElementById('hp-bar').style.width = Math.max(0, playerHp) + '%';
+
+          if (isBlocking) triggerSparks(player.mesh.position); // Efek benturan perisai
+
+          if (playerHp <= 0) {
+            alert('Game Over! Gladiator gugur di Gelombang ' + wave);
+            location.reload();
+          }
+        }
+      });
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+  </script>
+</body>
+</html>

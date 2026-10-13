@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe Glow</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #090d16; font-family: system-ui, -apple-system, sans-serif;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;
+    }
+    h2 { font-size: 22px; margin-bottom: 8px; color: #a855f7; }
+    #status { font-size: 14px; color: #94a3b8; margin-bottom: 16px; }
+    .board {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      width: 280px; height: 280px;
+    }
+    .cell {
+      background: #1e293b; border: 2px solid #334155; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px; font-weight: bold; cursor: pointer; transition: all 0.2s;
+    }
+    .cell:hover { border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.4); }
+    .cell.x { color: #ec4899; text-shadow: 0 0 10px #ec4899; }
+    .cell.o { color: #38bdf8; text-shadow: 0 0 10px #38bdf8; }
+    button {
+      margin-top: 20px; padding: 8px 20px; border: none; border-radius: 20px;
+      background: #a855f7; color: white; font-weight: bold; cursor: pointer; transition: 0.2s;
+    }
+    button:hover { background: #9333ea; }
+  </style>
+</head>
+<body>
+  <h2>Tic Tac Toe Glow ❌⭕</h2>
+  <div id="status">Giliran: Pemain X</div>
+  <div class="board" id="board"></div>
+  <button onclick="resetGame()">Riset Papan</button>
+
+  <script>
+    const board = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    let cells = Array(9).fill(null);
+    let currentPlayer = 'X';
+    let gameActive = true;
+
+    function render() {
+      board.innerHTML = '';
+      cells.forEach((val, idx) => {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        if (val) cell.classList.add(val.toLowerCase());
+        cell.innerText = val || '';
+        cell.addEventListener('click', () => handleClick(idx));
+        board.appendChild(cell);
+      });
+    }
+
+    function handleClick(idx) {
+      if (cells[idx] || !gameActive) return;
+      cells[idx] = currentPlayer;
+
+      if (checkWin()) {
+        statusEl.innerText = `Pemain ${currentPlayer} Menang! 🎉`;
+        gameActive = false;
+      } else if (cells.every(c => c)) {
+        statusEl.innerText = `Hasil Seri! 🤝`;
+        gameActive = false;
+      } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        statusEl.innerText = `Giliran: Pemain ${currentPlayer}`;
+      }
+      render();
+    }
+
+    function checkWin() {
+      const wins = [
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
+      ];
+      return wins.some(([a,b,c]) => cells[a] && cells[a] === cells[b] && cells[a] === cells[c]);
+    }
+
+    function resetGame() {
+      cells = Array(9).fill(null);
+      currentPlayer = 'X';
+      gameActive = true;
+      statusEl.innerText = `Giliran: Pemain X`;
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

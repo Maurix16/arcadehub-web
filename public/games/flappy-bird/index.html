@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Bird Arcade</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0f172a;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      background: #70c5ce;
+      display: block;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="gameCanvas" width="360" height="540"></canvas>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let frames = 0;
+    let score = 0;
+    let highScore = 0;
+    let gameState = 'START'; // 'START', 'PLAYING', 'GAMEOVER'
+
+    const bird = {
+      x: 60,
+      y: 200,
+      radius: 12,
+      gravity: 0.25,
+      jump: 4.8,
+      velocity: 0,
+      draw() {
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mata
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(this.x + 4, this.y - 3, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(this.x + 5, this.y - 3, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Paruh
+        ctx.fillStyle = '#e67e22';
+        ctx.beginPath();
+        ctx.fillRect(this.x + 6, this.y - 1, 9, 6);
+      },
+      flap() {
+        this.velocity = -this.jump;
+      },
+      update() {
+        if (gameState === 'PLAYING') {
+          this.velocity += this.gravity;
+          this.y += this.velocity;
+
+          // Tabrakan dengan tanah
+          if (this.y + this.radius >= canvas.height - 60) {
+            this.y = canvas.height - 60 - this.radius;
+            gameState = 'GAMEOVER';
+          }
+        } else if (gameState === 'START') {
+          this.y = 220 + Math.sin(frames / 10) * 6;
+        }
+      },
+      reset() {
+        this.y = 200;
+        this.velocity = 0;
+      }
+    };
+
+    const pipes = {
+      position: [],
+      w: 52,
+      gap: 120,
+      dx: 2,
+      draw() {
+        for (let i = 0; i < this.position.length; i++) {
+          let p = this.position[i];
+          let topYPos = p.y;
+          let bottomYPos = p.y + this.gap;
+
+          // Pipa Atas
+          ctx.fillStyle = '#2ecc71';
+          ctx.fillRect(p.x, 0, this.w, topYPos);
+          ctx.strokeStyle = '#27ae60';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(p.x, 0, this.w, topYPos);
+
+          // Pipa Bawah
+          ctx.fillRect(p.x, bottomYPos, this.w, canvas.height - bottomYPos - 60);
+          ctx.strokeRect(p.x, bottomYPos, this.w, canvas.height - bottomYPos - 60);
+        }
+      },
+      update() {
+        if (gameState !== 'PLAYING') return;
+
+        if (frames % 100 === 0) {
+          this.position.push({
+            x: canvas.width,
+            y: -180 * (Math.random() + 1) + 140
+          });
+        }
+
+        for (let i = 0; i < this.position.length; i++) {
+          let p = this.position[i];
+
+          p.x -= this.dx;
+
+          // Deteksi Tabrakan
+          if (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + this.w) {
+            if (bird.y - bird.radius < p.y || bird.y + bird.radius > p.y + this.gap) {
+              gameState = 'GAMEOVER';
+            }
+          }
+
+          // Tambah Skor
+          if (p.x + this.w < bird.x && !p.scored) {
+            score++;
+            p.scored = true;
+            highScore = Math.max(score, highScore);
+          }
+
+          // Hapus pipa yang sudah lewat screen
+          if (p.x + this.w <= 0) {
+            this.position.shift();
+          }
+        }
+      },
+      reset() {
+        this.position = [];
+      }
+    };
+
+    const fg = {
+      draw() {
+        ctx.fillStyle = '#e0cda3';
+        ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
+        ctx.fillStyle = '#27ae60';
+        ctx.fillRect(0, canvas.height - 60, canvas.width, 12);
+      }
+    };
+
+    function drawUI() {
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+
+      if (gameState === 'START') {
+        ctx.font = 'bold 20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.strokeText('Klik / Spasi untuk Terbang', canvas.width / 2, canvas.height / 2 + 40);
+        ctx.fillText('Klik / Spasi untuk Terbang', canvas.width / 2, canvas.height / 2 + 40);
+      } else if (gameState === 'PLAYING') {
+        ctx.font = 'bold 36px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.strokeText(score, canvas.width / 2, 60);
+        ctx.fillText(score, canvas.width / 2, 60);
+      } else if (gameState === 'GAMEOVER') {
+        ctx.font = 'bold 28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.strokeText('GAME OVER', canvas.width / 2, canvas.height / 2 - 40);
+        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 40);
+
+        ctx.font = '18px sans-serif';
+        ctx.strokeText('Skor Akhir: ' + score, canvas.width / 2, canvas.height / 2);
+        ctx.fillText('Skor Akhir: ' + score, canvas.width / 2, canvas.height / 2);
+
+        ctx.font = 'bold 16px sans-serif';
+        ctx.strokeText('Klik / Spasi Main Lagi', canvas.width / 2, canvas.height / 2 + 50);
+        ctx.fillText('Klik / Spasi Main Lagi', canvas.width / 2, canvas.height / 2 + 50);
+      }
+    }
+
+    function handleInput() {
+      if (gameState === 'START') {
+        gameState = 'PLAYING';
+        bird.flap();
+      } else if (gameState === 'PLAYING') {
+        bird.flap();
+      } else if (gameState === 'GAMEOVER') {
+        pipes.reset();
+        bird.reset();
+        score = 0;
+        gameState = 'PLAYING';
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        handleInput();
+      }
+    });
+
+    canvas.addEventListener('click', handleInput);
+
+    function loop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      bird.update();
+      pipes.update();
+
+      pipes.draw();
+      fg.draw();
+      bird.draw();
+      drawUI();
+
+      frames++;
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</body>
+</html>

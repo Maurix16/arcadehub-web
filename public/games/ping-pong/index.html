@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retro Ping Pong</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #090d16; font-family: system-ui, -apple-system, sans-serif;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    #score {
+      color: #38bdf8; font-size: 24px; font-weight: 800; margin-bottom: 12px; letter-spacing: 2px;
+    }
+    canvas {
+      background: #0f172a; border: 2px solid #38bdf8; border-radius: 12px;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="score">PEMAIN 0 - 0 AI</div>
+  <canvas id="game" width="500" height="350"></canvas>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+
+    const paddleW = 10, paddleH = 70;
+    const player = { x: 10, y: canvas.height / 2 - paddleH / 2, score: 0 };
+    const ai = { x: canvas.width - 20, y: canvas.height / 2 - paddleH / 2, score: 0 };
+    const ball = { x: canvas.width / 2, y: canvas.height / 2, r: 7, speed: 5, dx: 5, dy: 5 };
+
+    let upPressed = false, downPressed = false;
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowUp') upPressed = true;
+      if (e.key === 'ArrowDown') downPressed = true;
+    });
+    document.addEventListener('keyup', e => {
+      if (e.key === 'ArrowUp') upPressed = false;
+      if (e.key === 'ArrowDown') downPressed = false;
+    });
+
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      player.y = e.clientY - rect.top - paddleH / 2;
+    });
+
+    function resetBall() {
+      ball.x = canvas.width / 2;
+      ball.y = canvas.height / 2;
+      ball.speed = 5;
+      ball.dx = -ball.dx;
+      ball.dy = (Math.random() - 0.5) * 6;
+    }
+
+    function update() {
+      if (upPressed && player.y > 0) player.y -= 6;
+      if (downPressed && player.y < canvas.height - paddleH) player.y += 6;
+
+      // AI Logic
+      const aiTarget = ball.y - paddleH / 2;
+      ai.y += (aiTarget - ai.y) * 0.08;
+
+      // Ball Movement
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      // Wall Collision
+      if (ball.y - ball.r < 0 || ball.y + ball.r > canvas.height) ball.dy = -ball.dy;
+
+      // Paddle Collision
+      let p = (ball.x < canvas.width / 2) ? player : ai;
+      if (
+        ball.x - ball.r < p.x + paddleW &&
+        ball.x + ball.r > p.x &&
+        ball.y > p.y &&
+        ball.y < p.y + paddleH
+      ) {
+        ball.dx = -ball.dx;
+        ball.speed += 0.2;
+      }
+
+      // Score
+      if (ball.x < 0) { ai.score++; resetBall(); }
+      if (ball.x > canvas.width) { player.score++; resetBall(); }
+
+      scoreEl.innerText = `PEMAIN ${player.score} - ${ai.score} AI`;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Net
+      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = '#334155';
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 0);
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.stroke();
+
+      // Paddles
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(player.x, player.y, paddleW, paddleH);
+      ctx.fillStyle = '#f43f5e';
+      ctx.fillRect(ai.x, ai.y, paddleW, paddleH);
+
+      // Ball
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#facc15';
+      ctx.fill();
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+    loop();
+  </script>
+</body>
+</html>
