@@ -113,6 +113,7 @@ const CATEGORIES = [
 
 const SIDEBAR_MENU = [
   { label: 'Beranda', icon: '🏠' },
+  { label: 'Favorit Saya', icon: '⭐' },
   { label: 'Baru', icon: '✨' },
   { label: 'Sedang Tren', icon: '🔥' },
   { label: 'Originals', icon: '👑' },
@@ -887,20 +888,25 @@ export default function Home() {
   const [activeGame, setActiveGame] = useState<Game | null>(null);
   const [showCommunity, setShowCommunity] = useState(false);
 
-  // STATE FITUR BARU (Recently Played, Anti-AdBlock, Theme, Sub-Tag Filter)
+  // STATE FITUR BARU (Recently Played, Anti-AdBlock, Theme, Sub-Tag Filter, Favorit)
   const [recentlyPlayed, setRecentlyPlayed] = useState<Game[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [isAdBlockActive, setIsAdBlockActive] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [selectedTag, setSelectedTag] = useState<string>('semua');
 
   const gameContainerRef = useRef<HTMLDivElement>(null);
 
-  // 1. LOAD RECENTLY PLAYED & THEME DARI LOCALSTORAGE SAAT INITIAL MOUNT
+  // 1. LOAD RECENTLY PLAYED, FAVORITES & THEME DARI LOCALSTORAGE
   useEffect(() => {
     try {
       const savedRecent = localStorage.getItem('rixx_recent_games');
       if (savedRecent) {
         setRecentlyPlayed(JSON.parse(savedRecent));
+      }
+      const savedFavs = localStorage.getItem('rixx_favorite_games');
+      if (savedFavs) {
+        setFavorites(JSON.parse(savedFavs));
       }
       const savedTheme = localStorage.getItem('rixx_theme') as 'dark' | 'light';
       if (savedTheme) {
@@ -956,6 +962,29 @@ export default function Home() {
     });
   };
 
+  // HANDLER TOGGLE FAVORIT (BOOKMARK)
+  const toggleFavorite = (e: React.MouseEvent, gameId: string) => {
+    e.stopPropagation(); // Mencegah modal game terbuka saat menekan bintang
+    setFavorites((prev) => {
+      const updated = prev.includes(gameId)
+        ? prev.filter((id) => id !== gameId)
+        : [...prev, gameId];
+      try {
+        localStorage.setItem('rixx_favorite_games', JSON.stringify(updated));
+      } catch (err) {
+        console.error('Error saving favorites:', err);
+      }
+      return updated;
+    });
+  };
+
+  // HANDLER SHARE KE WHATSAPP (AJAK MABAR)
+  const handleShareWhatsApp = (game: Game) => {
+    const shareUrl = `https://arcadehub-web-nine.vercel.app/?game=${game.id}`;
+    const text = `Yuk mabar game *${game.title}* bareng aku di RixxGames! Tanpa install, langsung play gratis di sini: ${shareUrl}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   // HANDLER TOGGLE THEME (DARK / LIGHT)
   const toggleTheme = () => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
@@ -967,7 +996,7 @@ export default function Home() {
     }
   };
 
-  // LOGIKA PENCARIAN & DUAL-FILTER (KATEGORI & SUB-TAG)
+  // LOGIKA PENCARIAN & MULTI-FILTER (KATEGORI, FAVORIT, SUB-TAG)
   const filteredGames = useMemo(() => {
     return GAMES.filter((g) => {
       const query = searchQuery.toLowerCase();
@@ -977,22 +1006,28 @@ export default function Home() {
 
       if (!matchSearch) return false;
 
-      // Filter Kategori Utama
-      const matchCategory =
-        selectedCat === 'Beranda' ||
-        g.category.toLowerCase() === selectedCat.toLowerCase() ||
-        g.tags.some((t) => t.toLowerCase() === selectedCat.toLowerCase());
+      // Filter Kategori Utama / Sidebar Menu
+      if (selectedCat === 'Favorit Saya') {
+        if (!favorites.includes(g.id)) return false;
+      } else {
+        const matchCategory =
+          selectedCat === 'Beranda' ||
+          g.category.toLowerCase() === selectedCat.toLowerCase() ||
+          g.tags.some((t) => t.toLowerCase() === selectedCat.toLowerCase());
 
-      if (!matchCategory) return false;
+        if (!matchCategory) return false;
+      }
 
       // Filter Sub-Tag Detail
-      if (selectedTag !== 'semua') {
+      if (selectedTag === 'favorit') {
+        if (!favorites.includes(g.id)) return false;
+      } else if (selectedTag !== 'semua') {
         return g.tags.includes(selectedTag);
       }
 
       return true;
     });
-  }, [searchQuery, selectedCat, selectedTag]);
+  }, [searchQuery, selectedCat, selectedTag, favorites]);
 
   const bigHeroGame = filteredGames.find((g) => g.isBigHero) || filteredGames[0];
   const gridGames = filteredGames.filter((g) => g.id !== bigHeroGame?.id);
@@ -1137,6 +1172,11 @@ export default function Home() {
             >
               <span className="text-base">{menu.icon}</span>
               <span>{menu.label}</span>
+              {menu.label === 'Favorit Saya' && favorites.length > 0 && (
+                <span className="ml-auto text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full font-black">
+                  {favorites.length}
+                </span>
+              )}
             </button>
           ))}
         </aside>
@@ -1163,11 +1203,11 @@ export default function Home() {
           {/* SUB-FILTER TAG GENRE DETAIL */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-none">
             <span className={`font-bold shrink-0 text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Filter Tag:</span>
-            {['semua', 'baru', 'sedang tren', 'adrenaline', '5-minute fun', 'originals', 'meme & bloxy'].map((tag) => (
+            {['semua', 'favorit', 'baru', 'sedang tren', 'adrenaline', '5-minute fun', 'originals', 'meme & bloxy'].map((tag) => (
               <button
                 key={tag}
                 onClick={() => setSelectedTag(tag)}
-                className={`px-3 py-1 rounded-xl capitalize font-bold transition shrink-0 cursor-pointer active:scale-95 ${
+                className={`px-3 py-1 rounded-xl capitalize font-bold transition shrink-0 cursor-pointer active:scale-95 flex items-center gap-1 ${
                   selectedTag === tag
                     ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/20'
                     : isLight 
@@ -1175,7 +1215,8 @@ export default function Home() {
                       : 'bg-[#121929] text-slate-400 hover:text-slate-200 border border-slate-800'
                 }`}
               >
-                {tag}
+                {tag === 'favorit' && <span>⭐</span>}
+                <span>{tag}</span>
               </button>
             ))}
           </div>
@@ -1184,7 +1225,7 @@ export default function Home() {
           <AdsterraBanner />
 
           {/* SEKSI TERAKHIR DIMAINKAN (RECENTLY PLAYED) */}
-          {recentlyPlayed.length > 0 && (
+          {recentlyPlayed.length > 0 && selectedCat === 'Beranda' && selectedTag === 'semua' && (
             <section className="space-y-3">
               <h2 className={`text-sm sm:text-base font-black flex items-center gap-2 ${
                 isLight ? 'text-slate-900' : 'text-white'
@@ -1196,10 +1237,19 @@ export default function Home() {
                   <div
                     key={game.id}
                     onClick={() => handleOpenGame(game)}
-                    className={`border hover:border-cyan-500 rounded-2xl p-2 sm:p-2.5 cursor-pointer transition active:scale-95 sm:hover:-translate-y-1 flex flex-col justify-between group overflow-hidden ${
+                    className={`border hover:border-cyan-500 rounded-2xl p-2 sm:p-2.5 cursor-pointer transition active:scale-95 sm:hover:-translate-y-1 flex flex-col justify-between group overflow-hidden relative ${
                       isLight ? 'bg-white border-slate-300 shadow-sm' : 'bg-[#0f1523] border-cyan-500/30'
                     }`}
                   >
+                    {/* TOMBOL BINTANG FAVORIT */}
+                    <button
+                      onClick={(e) => toggleFavorite(e, game.id)}
+                      title={favorites.includes(game.id) ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
+                      className="absolute top-2 left-2 z-20 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-xs transition active:scale-90 hover:scale-110 cursor-pointer border border-white/20 text-amber-300"
+                    >
+                      {favorites.includes(game.id) ? '⭐' : '☆'}
+                    </button>
+
                     <div className="h-20 sm:h-24 w-full rounded-xl overflow-hidden relative">
                       <GameImage
                         src={game.image}
@@ -1239,6 +1289,15 @@ export default function Home() {
                   onClick={() => handleOpenGame(bigHeroGame)}
                   className="md:col-span-2 h-64 sm:h-80 rounded-2xl sm:rounded-3xl border border-cyan-500/30 sm:hover:border-cyan-400 cursor-pointer transition-all active:scale-[0.99] sm:hover:scale-[1.01] shadow-2xl flex flex-col justify-end p-4 sm:p-6 relative overflow-hidden group"
                 >
+                  {/* TOMBOL BINTANG FAVORIT */}
+                  <button
+                    onClick={(e) => toggleFavorite(e, bigHeroGame.id)}
+                    title={favorites.includes(bigHeroGame.id) ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
+                    className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 w-8 h-8 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-sm transition active:scale-90 hover:scale-110 cursor-pointer border border-white/20 text-amber-300"
+                  >
+                    {favorites.includes(bigHeroGame.id) ? '⭐' : '☆'}
+                  </button>
+
                   <GameImage
                     src={bigHeroGame.image}
                     alt={bigHeroGame.title}
@@ -1269,10 +1328,19 @@ export default function Home() {
                     <div
                       key={game.id}
                       onClick={() => handleOpenGame(game)}
-                      className={`border hover:border-cyan-500/80 rounded-2xl p-2 sm:p-2.5 cursor-pointer transition active:scale-95 sm:hover:-translate-y-1 flex flex-col justify-between group overflow-hidden ${
+                      className={`border hover:border-cyan-500/80 rounded-2xl p-2 sm:p-2.5 cursor-pointer transition active:scale-95 sm:hover:-translate-y-1 flex flex-col justify-between group overflow-hidden relative ${
                         isLight ? 'bg-white border-slate-300 shadow-sm' : 'bg-[#0f1523] border-slate-800'
                       }`}
                     >
+                      {/* TOMBOL BINTANG FAVORIT */}
+                      <button
+                        onClick={(e) => toggleFavorite(e, game.id)}
+                        title={favorites.includes(game.id) ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
+                        className="absolute top-1.5 left-1.5 z-20 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-xs transition active:scale-90 hover:scale-110 cursor-pointer border border-white/20 text-amber-300"
+                      >
+                        {favorites.includes(game.id) ? '⭐' : '☆'}
+                      </button>
+
                       <div className="h-20 sm:h-24 w-full rounded-xl overflow-hidden relative">
                         <GameImage
                           src={game.image}
@@ -1323,10 +1391,19 @@ export default function Home() {
                   <div
                     key={game.id}
                     onClick={() => handleOpenGame(game)}
-                    className={`border hover:border-cyan-500/80 rounded-2xl p-2 sm:p-2.5 cursor-pointer transition active:scale-95 sm:hover:-translate-y-1 flex flex-col justify-between group overflow-hidden ${
+                    className={`border hover:border-cyan-500/80 rounded-2xl p-2 sm:p-2.5 cursor-pointer transition active:scale-95 sm:hover:-translate-y-1 flex flex-col justify-between group overflow-hidden relative ${
                       isLight ? 'bg-white border-slate-300 shadow-sm' : 'bg-[#0f1523] border-slate-800'
                     }`}
                   >
+                    {/* TOMBOL BINTANG FAVORIT */}
+                    <button
+                      onClick={(e) => toggleFavorite(e, game.id)}
+                      title={favorites.includes(game.id) ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
+                      className="absolute top-1.5 left-1.5 z-20 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-xs transition active:scale-90 hover:scale-110 cursor-pointer border border-white/20 text-amber-300"
+                    >
+                      {favorites.includes(game.id) ? '⭐' : '☆'}
+                    </button>
+
                     <div className="h-28 sm:h-32 w-full rounded-xl overflow-hidden relative">
                       <GameImage
                         src={game.image}
@@ -1457,6 +1534,27 @@ export default function Home() {
               </div>
 
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                {/* TOMBOL SHARE WHATSAPP (AJAK MABAR) */}
+                <button
+                  onClick={() => handleShareWhatsApp(activeGame)}
+                  title="Bagikan ke WhatsApp"
+                  className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-lg active:scale-95 cursor-pointer"
+                >
+                  <span>💬</span>
+                  <span className="hidden sm:inline">Ajak Mabar</span>
+                </button>
+
+                {/* TOMBOL TOGGLE FAVORIT DI MODAL */}
+                <button
+                  onClick={(e) => toggleFavorite(e, activeGame.id)}
+                  title={favorites.includes(activeGame.id) ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
+                  className="p-1.5 sm:px-2.5 sm:py-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded-xl text-xs font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                >
+                  <span>{favorites.includes(activeGame.id) ? '⭐' : '☆'}</span>
+                  <span className="hidden sm:inline">{favorites.includes(activeGame.id) ? 'Favorit' : 'Tambah Favorit'}</span>
+                </button>
+
+                {/* TOMBOL FULLSCREEN */}
                 <button
                   onClick={handleToggleFullscreen}
                   title="Mode Layar Penuh (Fullscreen)"
@@ -1466,6 +1564,7 @@ export default function Home() {
                   <span className="hidden sm:inline">Layar Penuh</span>
                 </button>
 
+                {/* TOMBOL TUTUP */}
                 <button
                   onClick={() => setActiveGame(null)}
                   title="Tutup Game"
